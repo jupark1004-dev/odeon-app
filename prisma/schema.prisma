@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// 1. 사용자 (아티스트 & 팬)
+model User {
+  id             String             @id @default(uuid())
+  username       String
+  role           String             // 'ARTIST' 또는 'FAN'
+  bio            String?            // 아티스트 소개
+  choco_balance  Int                @default(0) // 보유한 초코(재화)
+  createdAt      DateTime           @default(now())
+  
+  // 다른 데이터와의 연결고리
+  liveStreams    LiveStream[]
+  posts          Post[]
+  sentChocos     ChocoTransaction[] @relation("SentChocos")
+  receivedChocos ChocoTransaction[] @relation("ReceivedChocos")
+}
+
+// 2. 라이브 방송 (오데온 광장)
+model LiveStream {
+  id           String             @id @default(uuid())
+  artistId     String
+  artist       User               @relation(fields: [artistId], references: [id])
+  title        String
+  embedUrl     String             // 유튜브 라이브 등의 링크
+  isLive       Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  transactions ChocoTransaction[]
+}
+
+// 3. 데일리 포스트 (연습 실황 등)
+model Post {
+  id        String   @id @default(uuid())
+  artistId  String
+  artist    User     @relation(fields: [artistId], references: [id])
+  content   String
+  mediaUrl  String?
+  createdAt DateTime @default(now())
+}
+
+// 4. 초코 후원 내역 (따뜻한 응원)
+model ChocoTransaction {
+  id         String      @id @default(uuid())
+  senderId   String
+  sender     User        @relation("SentChocos", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User        @relation("ReceivedChocos", fields: [receiverId], references: [id])
+  streamId   String?
+  stream     LiveStream? @relation(fields: [streamId], references: [id])
+  amount     Int         // 후원한 초코 개수
+  message    String?     // 응원 메시지
+  createdAt  DateTime    @default(now())
+}

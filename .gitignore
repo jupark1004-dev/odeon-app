@@ -1,0 +1,24 @@
+# 의존성
+node_modules/
+
+# 환경변수 (절대 커밋 금지)
+.env
+.env.local
+.env.*.local
+
+# Next.js 빌드 결과물
+.next/
+out/
+
+# Prisma
+/generated/prisma
+prisma/dev.db
+prisma/dev.db-journal
+
+# 시스템 파일
+.DS_Store
+Thumbs.db
+
+# 에디터
+.vscode/
+*.swp

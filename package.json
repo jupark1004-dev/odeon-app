@@ -1,0 +1,19 @@
+{
+  "name": "odeon",
+  "version": "1.0.0",
+  "description": "아티스트와 팬을 연결하는 음악 플랫폼",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "next": "^16.1.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  }
+}
