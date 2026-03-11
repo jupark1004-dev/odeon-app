@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/lives — 라이브 방송 목록
 export async function GET() {
     try {
@@ -9,7 +11,7 @@ export async function GET() {
             orderBy: { createdAt: "desc" },
             include: {
                 artist: {
-                    select: { id: true, username: true, image: true },
+                    select: { id: true, username: true, bio: true },
                 },
                 _count: { select: { transactions: true } },
             },

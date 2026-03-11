@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/lives/[id]
 export async function GET(
     _req: Request,
@@ -12,7 +14,7 @@ export async function GET(
             where: { id },
             include: {
                 artist: {
-                    select: { id: true, username: true, image: true, bio: true },
+                    select: { id: true, username: true, bio: true },
                 },
                 transactions: {
                     orderBy: { createdAt: "desc" },

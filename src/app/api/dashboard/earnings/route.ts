@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/dashboard/earnings — 수입 전체 내역
 export async function GET() {
     try {

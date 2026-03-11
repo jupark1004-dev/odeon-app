@@ -2,13 +2,15 @@ import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/posts — 포스트 목록
 export async function GET() {
     try {
         const posts = await prisma.post.findMany({
             orderBy: { createdAt: "desc" },
             include: {
-                artist: { select: { id: true, username: true, image: true } },
+                artist: { select: { id: true, username: true } },
             },
         });
         return NextResponse.json(posts);
