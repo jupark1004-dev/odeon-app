@@ -3,24 +3,72 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // 1. 사용자 (아티스트 & 팬)
 model User {
-  id             String             @id @default(uuid())
-  username       String
-  role           String             // 'ARTIST' 또는 'FAN'
-  bio            String?            // 아티스트 소개
-  choco_balance  Int                @default(0) // 보유한 초코(재화)
-  createdAt      DateTime           @default(now())
-  
-  // 다른 데이터와의 연결고리
-  liveStreams    LiveStream[]
+  id             String    @id @default(uuid())
+  email          String    @unique
+  emailVerified  DateTime?
+  password       String?   // bcrypt 해시 저장 (소셜 로그인 시 null 가능)
+  username       String?   // 닉네임
+  role           String    @default("FAN")  // 'ARTIST' 또는 'FAN'
+  bio            String?   // 아티스트 소개
+  image          String?   // 프로필 이미지 URL
+  choco_balance  Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // NextAuth 어댑터 필수 관계
+  accounts       Account[]
+  sessions       Session[]
+
+  // 서비스 데이터 관계
+  liveStreams     LiveStream[]
   posts          Post[]
   sentChocos     ChocoTransaction[] @relation("SentChocos")
   receivedChocos ChocoTransaction[] @relation("ReceivedChocos")
+}
+
+// NextAuth 필수 — 소셜 계정 연결 정보
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// NextAuth 필수 — 세션 (database strategy 사용 시)
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// NextAuth 필수 — 이메일 인증 토큰
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 // 2. 라이브 방송 (오데온 광장)
@@ -29,7 +77,7 @@ model LiveStream {
   artistId     String
   artist       User               @relation(fields: [artistId], references: [id])
   title        String
-  embedUrl     String             // 유튜브 라이브 등의 링크
+  embedUrl     String
   isLive       Boolean            @default(true)
   createdAt    DateTime           @default(now())
   transactions ChocoTransaction[]
@@ -45,7 +93,7 @@ model Post {
   createdAt DateTime @default(now())
 }
 
-// 4. 초코 후원 내역 (따뜻한 응원)
+// 4. 초코 후원 내역
 model ChocoTransaction {
   id         String      @id @default(uuid())
   senderId   String
@@ -54,7 +102,7 @@ model ChocoTransaction {
   receiver   User        @relation("ReceivedChocos", fields: [receiverId], references: [id])
   streamId   String?
   stream     LiveStream? @relation(fields: [streamId], references: [id])
-  amount     Int         // 후원한 초코 개수
-  message    String?     // 응원 메시지
+  amount     Int
+  message    String?
   createdAt  DateTime    @default(now())
 }
