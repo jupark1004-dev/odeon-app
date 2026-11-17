@@ -5,7 +5,6 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-// useSearchParams는 반드시 Suspense boundary 안에서 사용해야 Next.js 빌드가 통과됨
 function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -47,12 +46,12 @@ function LoginForm() {
 
     return (
         <>
-            <h1 className="auth-title">로그인</h1>
-            <p className="auth-subtitle">다시 만나서 반가워요 🎵</p>
+            <h1 className="auth-title">B1F 계단 내려가기</h1>
+            <p className="auth-subtitle">지하 1층 연습실과 라이브하우스에 입장합니다 🎸</p>
 
             {registered && (
                 <div className="form-success">
-                    회원가입이 완료되었습니다! 로그인해주세요 🎉
+                    B1F 멤버 등록이 완료되었습니다! 지금 입장해보세요 🎟️
                 </div>
             )}
 
@@ -92,13 +91,13 @@ function LoginForm() {
                     className="btn-primary"
                     disabled={loading}
                 >
-                    {loading ? "로그인 중..." : "로그인"}
+                    {loading ? "입장 중..." : "B1F 입장하기"}
                 </button>
             </form>
 
             <p className="auth-footer">
-                아직 계정이 없으신가요?{" "}
-                <Link href="/signup" className="auth-link">회원가입</Link>
+                처음 오셨나요?{" "}
+                <Link href="/signup" className="auth-link">멤버 등록하기</Link>
             </p>
         </>
     );

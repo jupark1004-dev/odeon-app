@@ -1,16 +1,22 @@
 {
-  "name": "odeon",
+  "name": "b1f",
   "version": "1.0.0",
-  "description": "아티스트와 팬을 연결하는 음악 플랫폼",
+  "description": "지하 1층 연습실의 땀방울이 무대가 되는 온라인 라이브하우스",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "seed": "node --env-file=.env prisma/seed.ts"
   },
-  "keywords": [],
+  "keywords": [
+    "b1f",
+    "livehouse",
+    "underground",
+    "indie",
+    "musician"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {

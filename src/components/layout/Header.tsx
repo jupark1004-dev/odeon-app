@@ -12,9 +12,9 @@ export default function Header() {
     const [menuOpen, setMenuOpen] = useState(false);
 
     const navLinks = [
-        { href: "/live", label: "📡 라이브" },
-        { href: "/posts", label: "📝 포스트" },
-        ...(isArtist ? [{ href: "/dashboard", label: "📊 대시보드" }] : []),
+        { href: "/live", label: "🎸 라이브 무대 (Stage)" },
+        { href: "/posts", label: "📹 지하 연습실 (Practice Log)" },
+        ...(isArtist ? [{ href: "/dashboard", label: "🎛️ 아티스트 스튜디오" }] : []),
     ];
 
     return (
@@ -22,8 +22,8 @@ export default function Header() {
             <div className="header-inner">
                 {/* 로고 */}
                 <Link href="/" className="header-logo" onClick={() => setMenuOpen(false)}>
-                    <span className="header-logo-icon">🎵</span>
-                    <span className="header-logo-text">Odeon</span>
+                    <span className="b1f-badge">B1F</span>
+                    <span className="header-logo-text">LIVEHOUSE</span>
                 </Link>
 
                 {/* 데스크톱 내비게이션 */}
@@ -44,13 +44,13 @@ export default function Header() {
                     {session ? (
                         <>
                             {isArtist && (
-                                <Link href="/dashboard" className="btn-new-post">
-                                    📊 대시보드
+                                <Link href="/posts/new" className="btn-new-post">
+                                    + 연습일지 기록
                                 </Link>
                             )}
                             <div className="user-info">
                                 <span className="user-role-badge">
-                                    {isArtist ? "🎤" : "🎧"}
+                                    {isArtist ? "🎤 뮤지션" : "🎟️ 관객"}
                                 </span>
                                 <span className="user-name">{session.user?.name ?? session.user?.email}</span>
                             </div>
@@ -58,13 +58,13 @@ export default function Header() {
                                 onClick={() => signOut({ callbackUrl: "/" })}
                                 className="btn-logout"
                             >
-                                로그아웃
+                                퇴장
                             </button>
                         </>
                     ) : (
                         <>
-                            <Link href="/login" className="btn-login">로그인</Link>
-                            <Link href="/signup" className="btn-signup">회원가입</Link>
+                            <Link href="/login" className="btn-login">입장 (로그인)</Link>
+                            <Link href="/signup" className="btn-signup">멤버 등록</Link>
                         </>
                     )}
                 </div>
@@ -98,7 +98,7 @@ export default function Header() {
                     {session ? (
                         <>
                             <div className="mobile-user-info">
-                                <span>{isArtist ? "🎤" : "🎧"}</span>
+                                <span>{isArtist ? "🎤 뮤지션" : "🎟️ 관객"}</span>
                                 <span>{session.user?.name ?? session.user?.email}</span>
                             </div>
                             <button
@@ -106,13 +106,13 @@ export default function Header() {
                                 onClick={() => { setMenuOpen(false); signOut({ callbackUrl: "/" }); }}
                                 style={{ textAlign: "left", background: "none", border: "none", color: "#f87171", cursor: "pointer" }}
                             >
-                                로그아웃
+                                퇴장 (로그아웃)
                             </button>
                         </>
                     ) : (
                         <>
-                            <Link href="/login" className="mobile-nav-link" onClick={() => setMenuOpen(false)}>로그인</Link>
-                            <Link href="/signup" className="mobile-nav-link" onClick={() => setMenuOpen(false)}>회원가입</Link>
+                            <Link href="/login" className="mobile-nav-link" onClick={() => setMenuOpen(false)}>입장 (로그인)</Link>
+                            <Link href="/signup" className="mobile-nav-link" onClick={() => setMenuOpen(false)}>멤버 등록 (회원가입)</Link>
                         </>
                     )}
                 </div>

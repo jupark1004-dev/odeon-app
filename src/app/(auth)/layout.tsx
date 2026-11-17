@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function AuthLayout({
     children,
 }: {
@@ -7,10 +9,10 @@ export default function AuthLayout({
         <div className="auth-layout">
             <div className="auth-container">
                 {/* 로고 */}
-                <div className="auth-logo">
-                    <span className="auth-logo-icon">🎵</span>
-                    <span className="auth-logo-text">Odeon</span>
-                </div>
+                <Link href="/" className="auth-logo">
+                    <span className="b1f-badge">B1F</span>
+                    <span className="auth-logo-text">UNDERGROUND STAGE</span>
+                </Link>
                 {children}
             </div>
         </div>

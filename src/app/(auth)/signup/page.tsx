@@ -4,6 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+const GENRE_OPTIONS = [
+    "지하아이돌 / 퍼포먼스팀",
+    "인디 밴드 / 록",
+    "싱어송라이터",
+    "보컬리스트",
+    "피아노 / 기타 / 세션",
+    "힙합 / R&B / 일렉트로닉",
+];
+
 export default function SignupPage() {
     const router = useRouter();
     const [formData, setFormData] = useState({
@@ -12,12 +21,14 @@ export default function SignupPage() {
         passwordConfirm: "",
         username: "",
         role: "FAN" as "ARTIST" | "FAN",
+        genre: "지하아이돌 / 퍼포먼스팀",
+        bio: "",
     });
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
     const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
     ) => {
         setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     };
@@ -47,13 +58,15 @@ export default function SignupPage() {
                     password: formData.password,
                     username: formData.username,
                     role: formData.role,
+                    genre: formData.role === "ARTIST" ? formData.genre : undefined,
+                    bio: formData.role === "ARTIST" ? formData.bio : undefined,
                 }),
             });
 
             const data = await res.json();
 
             if (!res.ok) {
-                setError(data.error || "회원가입 실패");
+                setError(data.error || "등록 실패");
                 return;
             }
 
@@ -67,8 +80,8 @@ export default function SignupPage() {
 
     return (
         <div className="auth-card">
-            <h1 className="auth-title">회원가입</h1>
-            <p className="auth-subtitle">Odeon과 함께 음악을 시작하세요</p>
+            <h1 className="auth-title">B1F 멤버 등록</h1>
+            <p className="auth-subtitle">지하 연습실의 땀방울부터 약속된 라이브 무대까지</p>
 
             <form onSubmit={handleSubmit} className="auth-form">
                 {/* 역할 선택 */}
@@ -78,30 +91,64 @@ export default function SignupPage() {
                         className={`role-btn ${formData.role === "FAN" ? "active" : ""}`}
                         onClick={() => setFormData((p) => ({ ...p, role: "FAN" }))}
                     >
-                        🎧 팬
+                        🎟️ 관객 / 팬
                     </button>
                     <button
                         type="button"
                         className={`role-btn ${formData.role === "ARTIST" ? "active" : ""}`}
                         onClick={() => setFormData((p) => ({ ...p, role: "ARTIST" }))}
                     >
-                        🎤 아티스트
+                        🎤 뮤지션 / 팀
                     </button>
                 </div>
 
                 <div className="form-group">
-                    <label htmlFor="username" className="form-label">닉네임</label>
+                    <label htmlFor="username" className="form-label">
+                        {formData.role === "ARTIST" ? "팀명 / 아티스트 활동명" : "관객 닉네임"}
+                    </label>
                     <input
                         id="username"
                         name="username"
                         type="text"
-                        placeholder="활동할 닉네임을 입력하세요"
+                        placeholder={formData.role === "ARTIST" ? "예: 네온즈 (NEONS) / 김결" : "공연장에서 불릴 닉네임"}
                         value={formData.username}
                         onChange={handleChange}
                         className="form-input"
                         required
                     />
                 </div>
+
+                {formData.role === "ARTIST" && (
+                    <>
+                        <div className="form-group">
+                            <label htmlFor="genre" className="form-label">활동 분야 / 포지션</label>
+                            <select
+                                id="genre"
+                                name="genre"
+                                value={formData.genre}
+                                onChange={handleChange}
+                                className="form-input"
+                            >
+                                {GENRE_OPTIONS.map((g) => (
+                                    <option key={g} value={g}>{g}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="bio" className="form-label">팀 소개 & 무대 각오 (선택)</label>
+                            <input
+                                id="bio"
+                                name="bio"
+                                type="text"
+                                placeholder="예: 홍대 지하 연습실에서 첫 단독 무대를 준비하는 4인조 밴드"
+                                value={formData.bio}
+                                onChange={handleChange}
+                                className="form-input"
+                                maxLength={120}
+                            />
+                        </div>
+                    </>
+                )}
 
                 <div className="form-group">
                     <label htmlFor="email" className="form-label">이메일</label>
@@ -152,13 +199,13 @@ export default function SignupPage() {
                     className="btn-primary"
                     disabled={loading}
                 >
-                    {loading ? "처리 중..." : "가입하기"}
+                    {loading ? "등록 중..." : "B1F 시작하기"}
                 </button>
             </form>
 
             <p className="auth-footer">
-                이미 계정이 있으신가요?{" "}
-                <Link href="/login" className="auth-link">로그인</Link>
+                이미 멤버이신가요?{" "}
+                <Link href="/login" className="auth-link">입장 (로그인)</Link>
             </p>
         </div>
     );

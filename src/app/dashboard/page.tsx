@@ -1,22 +1,40 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 interface Summary {
-    chocoBalance: number;
-    totalEarned: number;
+    artist: { username: string | null; genre: string | null; bio: string | null } | null;
+    totalTickets: number;
+    cheerCount: number;
     liveCount: number;
     postCount: number;
-    recentDonations: {
+    recentCheers: {
         id: string;
-        amount: number;
-        message: string | null;
+        badge: string;
+        message: string;
         createdAt: string;
         sender: { username: string | null };
         stream: { title: string } | null;
     }[];
+    recentTickets: {
+        id: string;
+        entryNumber: number;
+        createdAt: string;
+        user: { username: string | null };
+        stream: { title: string };
+    }[];
 }
+
+const GENRE_OPTIONS = [
+    "지하아이돌 / 퍼포먼스팀",
+    "인디 밴드 / 록",
+    "싱어송라이터",
+    "보컬리스트",
+    "피아노 / 기타 / 세션",
+    "힙합 / R&B / 일렉트로닉",
+];
 
 function timeAgo(dateStr: string) {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -29,18 +47,59 @@ function timeAgo(dateStr: string) {
 }
 
 export default function DashboardPage() {
+    const { data: session } = useSession();
+    const userId = (session?.user as { id?: string })?.id;
+
     const [summary, setSummary] = useState<Summary | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // 프로필 편집 상태
+    const [editingProfile, setEditingProfile] = useState(false);
+    const [username, setUsername] = useState("");
+    const [genre, setGenre] = useState(GENRE_OPTIONS[0]);
+    const [bio, setBio] = useState("");
+    const [savingProfile, setSavingProfile] = useState(false);
+    const [profileMsg, setProfileMsg] = useState("");
 
     useEffect(() => {
         fetch("/api/dashboard/summary")
             .then((r) => r.json())
-            .then(setSummary)
+            .then((data: Summary) => {
+                setSummary(data);
+                if (data?.artist) {
+                    setUsername(data.artist.username ?? "");
+                    setGenre(data.artist.genre || GENRE_OPTIONS[0]);
+                    setBio(data.artist.bio ?? "");
+                }
+            })
             .finally(() => setLoading(false));
     }, []);
 
+    const handleSaveProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSavingProfile(true);
+        setProfileMsg("");
+        try {
+            const res = await fetch("/api/dashboard/profile", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, genre, bio }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setProfileMsg("✅ 프로필이 업데이트되었습니다.");
+                setSummary((prev) => (prev ? { ...prev, artist: data.artist } : prev));
+                setEditingProfile(false);
+            } else {
+                setProfileMsg(`❌ ${data.error}`);
+            }
+        } finally {
+            setSavingProfile(false);
+        }
+    };
+
     if (loading) {
-        return <div className="loading-full">데이터를 불러오는 중...</div>;
+        return <div className="loading-full">스튜디오 데이터를 불러오는 중...</div>;
     }
 
     if (!summary) {
@@ -49,63 +108,156 @@ export default function DashboardPage() {
 
     return (
         <div className="dashboard-content">
-            <h1 className="dashboard-title">📊 대시보드 개요</h1>
+            <div className="dashboard-page-header">
+                <h1 className="dashboard-title">🎛️ B1F 아티스트 스튜디오</h1>
+                {userId && (
+                    <Link href={`/artist/${userId}`} className="btn-sm btn-outline">
+                        내 공개 프로필 보기 →
+                    </Link>
+                )}
+            </div>
 
             {/* 통계 카드 */}
             <div className="stats-grid">
                 <div className="stat-card highlight">
-                    <p className="stat-label">보유 초코</p>
-                    <p className="stat-value">🍫 {summary.chocoBalance.toLocaleString()}</p>
+                    <p className="stat-label">누적 입장권 발권</p>
+                    <p className="stat-value">🎟️ {summary.totalTickets.toLocaleString()}명</p>
+                    <p className="stat-sub">내 무대를 찾은 관객</p>
                 </div>
                 <div className="stat-card">
-                    <p className="stat-label">누적 수입</p>
-                    <p className="stat-value">+{summary.totalEarned.toLocaleString()}</p>
-                    <p className="stat-sub">총 후원 초코</p>
+                    <p className="stat-label">지하 연습실 일지</p>
+                    <p className="stat-value">📹 {summary.postCount}</p>
+                    <p className="stat-sub">누적 연습 기록</p>
                 </div>
                 <div className="stat-card">
-                    <p className="stat-label">라이브 방송</p>
-                    <p className="stat-value">{summary.liveCount}</p>
-                    <p className="stat-sub">등록된 방송</p>
+                    <p className="stat-label">라이브하우스 무대</p>
+                    <p className="stat-value">🎸 {summary.liveCount}</p>
+                    <p className="stat-sub">편성된 공연 수</p>
                 </div>
                 <div className="stat-card">
-                    <p className="stat-label">포스트</p>
-                    <p className="stat-value">{summary.postCount}</p>
-                    <p className="stat-sub">작성한 글</p>
+                    <p className="stat-label">관객 응원 슬로건</p>
+                    <p className="stat-value">🙌 {summary.cheerCount.toLocaleString()}</p>
+                    <p className="stat-sub">받은 응원 메시지</p>
                 </div>
             </div>
 
-            {/* 빠른 링크 */}
+            {/* 빠른 액션 */}
             <div className="quick-actions">
-                <Link href="/dashboard/live/new" className="btn btn-primary">
-                    📡 새 라이브 등록
+                <Link href="/posts/new" className="btn btn-primary">
+                    📹 오늘 연습일지 기록하기
                 </Link>
-                <Link href="/posts/new" className="btn btn-secondary">
-                    📝 포스트 작성
+                <Link href="/dashboard/live/new" className="btn btn-secondary">
+                    🎸 새 라이브 무대 편성
                 </Link>
-                <Link href="/dashboard/earnings" className="btn btn-secondary">
-                    🍫 수입 상세 보기
-                </Link>
+                <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setEditingProfile((v) => !v)}
+                >
+                    ✏️ 팀 프로필 · 소개 수정
+                </button>
             </div>
 
-            {/* 최근 후원 */}
-            <div className="recent-section">
-                <h2 className="section-title">최근 후원</h2>
-                {summary.recentDonations.length === 0 ? (
-                    <p className="empty-text">아직 후원이 없습니다</p>
+            {profileMsg && (
+                <p className="donate-result success" style={{ marginBottom: "20px" }}>
+                    {profileMsg}
+                </p>
+            )}
+
+            {/* 프로필 편집 폼 */}
+            {editingProfile && (
+                <form onSubmit={handleSaveProfile} className="profile-cheer-form" style={{ marginBottom: "32px" }}>
+                    <h2 className="section-title" style={{ marginBottom: "4px" }}>✏️ 아티스트 프로필 수정</h2>
+                    <div className="form-row-2">
+                        <div className="form-group">
+                            <label className="form-label">팀명 / 활동명</label>
+                            <input
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="form-input"
+                                required
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">활동 분야 / 포지션</label>
+                            <select
+                                value={genre}
+                                onChange={(e) => setGenre(e.target.value)}
+                                className="form-input"
+                            >
+                                {GENRE_OPTIONS.map((g) => (
+                                    <option key={g} value={g}>{g}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">팀 소개 & 무대 각오</label>
+                        <input
+                            type="text"
+                            value={bio}
+                            onChange={(e) => setBio(e.target.value)}
+                            className="form-input"
+                            maxLength={150}
+                            placeholder="팀의 서사와 음악 스타일을 소개해주세요"
+                        />
+                    </div>
+                    <div className="form-actions">
+                        <button type="button" className="btn-sm btn-outline" onClick={() => setEditingProfile(false)}>
+                            취소
+                        </button>
+                        <button type="submit" className="btn-sm btn-live" disabled={savingProfile}>
+                            {savingProfile ? "저장 중..." : "프로필 저장"}
+                        </button>
+                    </div>
+                </form>
+            )}
+
+            {/* 최근 입장권 발권 관객 */}
+            <div className="recent-section" style={{ marginBottom: "32px" }}>
+                <h2 className="section-title">🎟️ 최근 입장 정리번호 발권 관객</h2>
+                {summary.recentTickets.length === 0 ? (
+                    <p className="empty-text">아직 발권된 입장권이 없습니다.</p>
                 ) : (
                     <div className="recent-donations">
-                        {summary.recentDonations.map((d) => (
-                            <div key={d.id} className="recent-donation-item">
+                        {summary.recentTickets.map((t) => (
+                            <div key={t.id} className="recent-donation-item">
                                 <div className="donation-left">
-                                    <span className="donor-name">{d.sender.username ?? "익명"}</span>
-                                    {d.stream && (
-                                        <span className="donation-stream">📡 {d.stream.title}</span>
-                                    )}
-                                    {d.message && <span className="donation-msg">💬 {d.message}</span>}
+                                    <span className="donor-name">
+                                        #{String(t.entryNumber).padStart(3, "0")} · {t.user.username ?? "관객"}
+                                    </span>
+                                    <span className="donation-stream">🎸 {t.stream.title}</span>
                                 </div>
                                 <div className="donation-right">
-                                    <span className="donation-choco">🍫 +{d.amount}</span>
-                                    <span className="donation-time">{timeAgo(d.createdAt)}</span>
+                                    <span className="cheer-badge-tag">입장 예약 완료</span>
+                                    <span className="donation-time">{timeAgo(t.createdAt)}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* 최근 응원 슬로건 */}
+            <div className="recent-section">
+                <h2 className="section-title">🙌 최근 도착한 응원 슬로건</h2>
+                {summary.recentCheers.length === 0 ? (
+                    <p className="empty-text">아직 도착한 응원 슬로건이 없습니다.</p>
+                ) : (
+                    <div className="recent-donations">
+                        {summary.recentCheers.map((c) => (
+                            <div key={c.id} className="recent-donation-item">
+                                <div className="donation-left">
+                                    <span className="donor-name">{c.sender.username ?? "익명 관객"}</span>
+                                    {c.stream && (
+                                        <span className="donation-stream">🎸 {c.stream.title}</span>
+                                    )}
+                                    <span className="donation-msg">💬 {c.message}</span>
+                                </div>
+                                <div className="donation-right">
+                                    <span className="cheer-badge-tag">{c.badge}</span>
+                                    <span className="donation-time">{timeAgo(c.createdAt)}</span>
                                 </div>
                             </div>
                         ))}

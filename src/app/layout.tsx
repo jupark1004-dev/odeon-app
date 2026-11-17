@@ -1,17 +1,10 @@
 import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
 import "@/styles/globals.css";
 import AuthProvider from "@/components/providers/AuthProvider";
 
-const outfit = Outfit({
-    subsets: ["latin"],
-    variable: "--font-outfit",
-    display: "swap",
-});
-
 export const metadata: Metadata = {
-    title: "Odeon — 아티스트와 팬을 연결하는 음악 플랫폼",
-    description: "라이브 방송, 데일리 포스트, 초코 후원으로 아티스트를 응원하세요.",
+    title: "B1F — 지하 1층 연습실 & 언더그라운드 라이브하우스",
+    description: "지하 연습실의 땀방울부터 약속된 라이브 무대까지. 뮤지션과 관객이 서사를 함께 만드는 전용 라이브하우스 B1F.",
 };
 
 export default function RootLayout({
@@ -21,7 +14,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="ko">
-            <body className={outfit.variable}>
+            <body>
                 <AuthProvider>
                     {children}
                 </AuthProvider>

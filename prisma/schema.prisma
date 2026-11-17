@@ -7,17 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 1. 사용자 (아티스트 & 팬)
+// 1. 사용자 (뮤지션 & 관객/팬)
 model User {
   id             String    @id @default(uuid())
   email          String    @unique
   emailVerified  DateTime?
   password       String?   // bcrypt 해시 저장 (소셜 로그인 시 null 가능)
-  username       String?   // 닉네임
+  username       String?   // 활동명 / 팀명 / 닉네임
   role           String    @default("FAN")  // 'ARTIST' 또는 'FAN'
-  bio            String?   // 아티스트 소개
+  genre          String?   // 예: '인디 밴드', '지하아이돌', '싱어송라이터', '보컬', '악기/세션'
+  bio            String?   // 아티스트 소개 및 팀 서사
   image          String?   // 프로필 이미지 URL
-  choco_balance  Int       @default(0)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -25,11 +25,12 @@ model User {
   accounts       Account[]
   sessions       Session[]
 
-  // 서비스 데이터 관계
-  liveStreams     LiveStream[]
+  // B1F 서비스 데이터 관계
+  liveStreams    LiveStream[]
   posts          Post[]
-  sentChocos     ChocoTransaction[] @relation("SentChocos")
-  receivedChocos ChocoTransaction[] @relation("ReceivedChocos")
+  tickets        Ticket[]
+  sentCheers     Cheer[]   @relation("SentCheers")
+  receivedCheers Cheer[]   @relation("ReceivedCheers")
 }
 
 // NextAuth 필수 — 소셜 계정 연결 정보
@@ -52,7 +53,7 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
-// NextAuth 필수 — 세션 (database strategy 사용 시)
+// NextAuth 필수 — 세션
 model Session {
   id           String   @id @default(uuid())
   sessionToken String   @unique
@@ -71,38 +72,62 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// 2. 라이브 방송 (오데온 광장)
+// 2. B1F 라이브하우스 무대 (공연 예고 / 실시간 무대 / 무대 아카이브)
 model LiveStream {
-  id           String             @id @default(uuid())
+  id           String    @id @default(uuid())
   artistId     String
-  artist       User               @relation(fields: [artistId], references: [id])
+  artist       User      @relation(fields: [artistId], references: [id], onDelete: Cascade)
   title        String
-  embedUrl     String
-  isLive       Boolean            @default(true)
-  createdAt    DateTime           @default(now())
-  transactions ChocoTransaction[]
+  embedUrl     String    // 무대 영상 또는 라이브 스트림 URL
+  isLive       Boolean   @default(false)
+  status       String    @default("UPCOMING") // 'UPCOMING' | 'LIVE' | 'ENDED'
+  scheduledAt  DateTime  @default(now())      // 공연 일시 (타임테이블 & D-Day용)
+  setlist      String?   // 셋리스트 (줄바꿈 구분)
+  description  String?   // 공연 소개 및 무대 각오
+  createdAt    DateTime  @default(now())
+
+  tickets      Ticket[]
+  cheers       Cheer[]
+  practiceLogs Post[]
 }
 
-// 3. 데일리 포스트 (연습 실황 등)
+// 3. 지하 연습실 일지 (Practice Log — 무대를 향한 땀방울 기록)
 model Post {
-  id        String   @id @default(uuid())
-  artistId  String
-  artist    User     @relation(fields: [artistId], references: [id])
-  content   String
-  mediaUrl  String?
-  createdAt DateTime @default(now())
+  id          String      @id @default(uuid())
+  artistId    String
+  artist      User        @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  content     String      // 오늘의 연습 일지 / 작업 노트
+  mediaUrl    String?     // 연습 영상(유튜브 URL) 또는 이미지 URL
+  practiceDay Int         @default(1)          // 연습 N일차 (예: Day 14)
+  category    String      @default("합주/연습") // '합주/연습' | '보컬/안무' | '곡 작업' | '백스테이지'
+  stageId     String?     // 어떤 무대를 준비하는 연습인지 연결
+  stage       LiveStream? @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  createdAt   DateTime    @default(now())
 }
 
-// 4. 초코 후원 내역
-model ChocoTransaction {
+// 4. B1F 무대 입장권 (정리번호 티켓 발권 / RSVP)
+model Ticket {
+  id          String     @id @default(uuid())
+  streamId    String
+  stream      LiveStream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entryNumber Int        // 입장 정리번호 (#001, #002...)
+  createdAt   DateTime   @default(now())
+
+  @@unique([streamId, userId])
+}
+
+// 5. 무대 응원 슬로건 (초코 후원을 대체하는 순수 관객 응원)
+model Cheer {
   id         String      @id @default(uuid())
   senderId   String
-  sender     User        @relation("SentChocos", fields: [senderId], references: [id])
+  sender     User        @relation("SentCheers", fields: [senderId], references: [id], onDelete: Cascade)
   receiverId String
-  receiver   User        @relation("ReceivedChocos", fields: [receiverId], references: [id])
+  receiver   User        @relation("ReceivedCheers", fields: [receiverId], references: [id], onDelete: Cascade)
   streamId   String?
-  stream     LiveStream? @relation(fields: [streamId], references: [id])
-  amount     Int
-  message    String?
+  stream     LiveStream? @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  badge      String      @default("🔥 최애무대") // 슬로건 태그
+  message    String
   createdAt  DateTime    @default(now())
 }

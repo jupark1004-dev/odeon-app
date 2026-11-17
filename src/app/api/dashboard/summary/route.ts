@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/dashboard/summary — 아티스트 대시보드 요약
+// GET /api/dashboard/summary — B1F 아티스트 스튜디오 요약
 export async function GET() {
     try {
         const session = await auth();
@@ -14,40 +14,49 @@ export async function GET() {
 
         const user = session.user as { id: string; role?: string };
         if (user.role !== "ARTIST") {
-            return NextResponse.json({ error: "아티스트만 접근할 수 있습니다." }, { status: 403 });
+            return NextResponse.json({ error: "뮤지션만 접근할 수 있습니다." }, { status: 403 });
         }
 
         const artistId = user.id;
 
-        const [artist, liveCount, postCount, recentDonations] = await Promise.all([
-            prisma.user.findUnique({
-                where: { id: artistId },
-                select: { choco_balance: true, username: true },
-            }),
-            prisma.liveStream.count({ where: { artistId } }),
-            prisma.post.count({ where: { artistId } }),
-            prisma.chocoTransaction.findMany({
-                where: { receiverId: artistId },
-                orderBy: { createdAt: "desc" },
-                take: 5,
-                include: {
-                    sender: { select: { username: true } },
-                    stream: { select: { title: true } },
-                },
-            }),
-        ]);
-
-        const totalEarned = await prisma.chocoTransaction.aggregate({
-            where: { receiverId: artistId },
-            _sum: { amount: true },
-        });
+        const [artist, liveCount, postCount, totalTickets, cheerCount, recentCheers, recentTickets] =
+            await Promise.all([
+                prisma.user.findUnique({
+                    where: { id: artistId },
+                    select: { username: true, genre: true, bio: true },
+                }),
+                prisma.liveStream.count({ where: { artistId } }),
+                prisma.post.count({ where: { artistId } }),
+                prisma.ticket.count({ where: { stream: { artistId } } }),
+                prisma.cheer.count({ where: { receiverId: artistId } }),
+                prisma.cheer.findMany({
+                    where: { receiverId: artistId },
+                    orderBy: { createdAt: "desc" },
+                    take: 6,
+                    include: {
+                        sender: { select: { username: true } },
+                        stream: { select: { title: true } },
+                    },
+                }),
+                prisma.ticket.findMany({
+                    where: { stream: { artistId } },
+                    orderBy: { createdAt: "desc" },
+                    take: 6,
+                    include: {
+                        user: { select: { username: true } },
+                        stream: { select: { title: true } },
+                    },
+                }),
+            ]);
 
         return NextResponse.json({
-            chocoBalance: artist?.choco_balance ?? 0,
-            totalEarned: totalEarned._sum.amount ?? 0,
+            artist,
+            totalTickets,
+            cheerCount,
             liveCount,
             postCount,
-            recentDonations,
+            recentCheers,
+            recentTickets,
         });
     } catch (error) {
         console.error("[DASHBOARD SUMMARY]", error);

@@ -35,9 +35,9 @@ export default function DashboardLayout({
     if (!session || !isArtist) return null;
 
     const navItems = [
-        { href: "/dashboard", label: "📊 개요", exact: true },
-        { href: "/dashboard/earnings", label: "🍫 수입 내역" },
-        { href: "/dashboard/live", label: "📡 라이브 관리" },
+        { href: "/dashboard", label: "🎛️ 스튜디오 개요", exact: true },
+        { href: "/dashboard/live", label: "🎸 무대 편성 · 관리" },
+        { href: "/posts/new", label: "📹 연습일지 기록" },
     ];
 
     return (
@@ -47,7 +47,7 @@ export default function DashboardLayout({
                 {/* 사이드 메뉴 */}
                 <aside className="dashboard-sidebar">
                     <div className="dashboard-sidebar-header">
-                        <p className="sidebar-label">아티스트 대시보드</p>
+                        <p className="sidebar-label">B1F ARTIST STUDIO</p>
                         <p className="sidebar-name">🎤 {session.user?.name}</p>
                     </div>
                     <nav className="sidebar-nav">

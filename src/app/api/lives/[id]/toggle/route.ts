@@ -2,9 +2,9 @@ import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// PATCH /api/lives/[id]/toggle — isLive 상태 토글
+// PATCH /api/lives/[id]/toggle — 무대 상태 전환 (UPCOMING -> LIVE -> ENDED -> UPCOMING)
 export async function PATCH(
-    _req: Request,
+    req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
@@ -18,15 +18,30 @@ export async function PATCH(
 
         const live = await prisma.liveStream.findUnique({ where: { id } });
         if (!live) {
-            return NextResponse.json({ error: "방송을 찾을 수 없습니다." }, { status: 404 });
+            return NextResponse.json({ error: "무대를 찾을 수 없습니다." }, { status: 404 });
         }
         if (live.artistId !== userId) {
             return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
         }
 
+        let nextStatus: string;
+        try {
+            const body = await req.json();
+            if (body?.status && ["UPCOMING", "LIVE", "ENDED"].includes(body.status)) {
+                nextStatus = body.status;
+            } else {
+                nextStatus = live.isLive ? "ENDED" : "LIVE";
+            }
+        } catch {
+            nextStatus = live.isLive ? "ENDED" : "LIVE";
+        }
+
         const updated = await prisma.liveStream.update({
             where: { id },
-            data: { isLive: !live.isLive },
+            data: {
+                status: nextStatus,
+                isLive: nextStatus === "LIVE",
+            },
         });
 
         return NextResponse.json(updated);

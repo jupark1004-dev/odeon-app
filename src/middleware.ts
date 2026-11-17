@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // 로그인이 필요한 보호 경로
-const protectedPaths = ["/dashboard", "/post/new", "/live/new"];
+const protectedPaths = ["/dashboard", "/posts/new"];
 
 // 이미 로그인한 사용자가 접근하면 홈으로 리디렉션할 경로
 const authPaths = ["/login", "/signup"];

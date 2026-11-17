@@ -4,12 +4,12 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
     try {
-        const { email, password, username, role } = await req.json();
+        const { email, password, username, role, genre, bio } = await req.json();
 
         // 입력 검증
         if (!email || !password || !username || !role) {
             return NextResponse.json(
-                { error: "모든 필드를 입력해주세요." },
+                { error: "필수 항목을 모두 입력해주세요." },
                 { status: 400 }
             );
         }
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
         if (existingUser) {
             return NextResponse.json(
-                { error: "이미 사용 중인 이메일입니다." },
+                { error: "이미 등록된 이메일입니다." },
                 { status: 409 }
             );
         }
@@ -50,12 +50,14 @@ export async function POST(req: NextRequest) {
                 password: hashedPassword,
                 username,
                 role,
+                genre: role === "ARTIST" ? (genre || "인디 밴드") : null,
+                bio: role === "ARTIST" ? (bio || null) : null,
             },
         });
 
         return NextResponse.json(
             {
-                message: "회원가입이 완료되었습니다.",
+                message: "B1F 멤버 등록이 완료되었습니다.",
                 user: { id: user.id, email: user.email, username: user.username, role: user.role },
             },
             { status: 201 }

@@ -4,13 +4,14 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/posts — 포스트 목록
+// GET /api/posts — 지하 연습실 일지(Practice Log) 목록
 export async function GET() {
     try {
         const posts = await prisma.post.findMany({
             orderBy: { createdAt: "desc" },
             include: {
-                artist: { select: { id: true, username: true } },
+                artist: { select: { id: true, username: true, genre: true } },
+                stage: { select: { id: true, title: true, scheduledAt: true, status: true, isLive: true } },
             },
         });
         return NextResponse.json(posts);
@@ -20,7 +21,7 @@ export async function GET() {
     }
 }
 
-// POST /api/posts — 포스트 작성 (ARTIST 전용)
+// POST /api/posts — 지하 연습실 일지 작성 (ARTIST 전용)
 export async function POST(req: Request) {
     try {
         const session = await auth();
@@ -30,16 +31,23 @@ export async function POST(req: Request) {
 
         const user = session.user as { id: string; role?: string };
         if (user.role !== "ARTIST") {
-            return NextResponse.json({ error: "아티스트만 포스트를 작성할 수 있습니다." }, { status: 403 });
+            return NextResponse.json({ error: "뮤지션만 연습일지를 작성할 수 있습니다." }, { status: 403 });
         }
 
-        const { content, mediaUrl } = await req.json();
+        const { content, mediaUrl, practiceDay, category, stageId } = await req.json();
         if (!content?.trim()) {
-            return NextResponse.json({ error: "내용을 입력해주세요." }, { status: 400 });
+            return NextResponse.json({ error: "연습 일지 내용을 입력해주세요." }, { status: 400 });
         }
 
         const post = await prisma.post.create({
-            data: { content, mediaUrl: mediaUrl ?? null, artistId: user.id },
+            data: {
+                content: content.trim(),
+                mediaUrl: mediaUrl?.trim() || null,
+                practiceDay: Number(practiceDay) > 0 ? Number(practiceDay) : 1,
+                category: category || "합주/연습",
+                stageId: stageId || null,
+                artistId: user.id,
+            },
         });
 
         return NextResponse.json(post, { status: 201 });

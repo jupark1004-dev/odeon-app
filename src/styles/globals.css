@@ -3,7 +3,7 @@
    다크 테마 기반, 골드/앰버 포인트 컬러
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
 
 :root {
   /* 색상 팔레트 */
@@ -1694,5 +1694,805 @@ img {
 
   .artist-profile-stats {
     justify-content: center;
+  }
+}
+
+
+/* ============================================================
+   B1F 언더그라운드 라이브하우스 전용 스타일 확장
+   ============================================================ */
+
+.b1f-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 9px;
+  background: var(--color-primary);
+  color: #0a0a0f;
+  font-weight: 800;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+}
+
+.b1f-home {
+  min-height: 100vh;
+}
+
+.b1f-hero {
+  padding: 68px var(--space-lg) 48px;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+  background:
+    radial-gradient(ellipse 80% 70% at 50% 0%, rgba(240, 165, 0, 0.14) 0%, transparent 65%),
+    var(--color-bg-base);
+}
+
+.b1f-hero-inner {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.home-section {
+  margin-bottom: 56px;
+}
+
+.section-header-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.section-kicker {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--color-primary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.home-section-title {
+  font-size: clamp(1.3rem, 3vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.section-more-link {
+  font-size: 0.88rem;
+  color: var(--color-primary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.section-more-link:hover {
+  color: var(--color-primary-light);
+}
+
+.empty-box {
+  background: var(--color-bg-surface);
+  border: 1px dashed var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+/* 무대(Stage) 포스터 카드 */
+.stage-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition-base);
+}
+
+.stage-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-glow);
+}
+
+.stage-card-top {
+  height: 168px;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(240, 165, 0, 0.18), transparent 70%),
+    linear-gradient(145deg, #161622, #0d0d14);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+}
+
+.stage-poster-icon {
+  font-size: 3rem;
+}
+
+.stage-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.stage-card-top .stage-status-pill {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+}
+
+.stage-status-pill.live {
+  background: #ef4444;
+  color: #ffffff;
+  animation: blink 1.5s ease infinite;
+}
+
+.stage-status-pill.upcoming {
+  background: rgba(240, 165, 0, 0.18);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary-light);
+}
+
+.stage-status-pill.ended {
+  background: rgba(154, 153, 168, 0.16);
+  color: var(--color-text-secondary);
+}
+
+.stage-schedule-text {
+  position: absolute;
+  top: 14px;
+  right: 12px;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  background: rgba(10, 10, 15, 0.7);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.stage-practice-pill {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  font-size: 0.75rem;
+  color: var(--color-text-primary);
+  background: rgba(10, 10, 15, 0.78);
+  border: 1px solid var(--color-border-light);
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+}
+
+.stage-card-body {
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.stage-card-title {
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--color-text-primary);
+}
+
+.stage-card-title:hover {
+  color: var(--color-primary);
+}
+
+.stage-card-artist-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.artist-chip-link {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.artist-chip-link:hover {
+  color: var(--color-primary);
+}
+
+.genre-mini-tag {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-light);
+  color: var(--color-text-secondary);
+}
+
+.stage-card-footer {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.stage-card-footer strong {
+  color: var(--color-primary);
+}
+
+/* 지하 연습실 프리뷰 그리드 */
+.practice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-md);
+}
+
+.practice-preview-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.practice-preview-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.practice-day-badge {
+  background: rgba(240, 165, 0, 0.15);
+  border: 1px solid rgba(240, 165, 0, 0.4);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+}
+
+.practice-cat-badge {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+}
+
+.practice-preview-content {
+  font-size: 0.92rem;
+  color: var(--color-text-primary);
+  line-height: 1.65;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.practice-target-stage {
+  font-size: 0.8rem;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(240, 165, 0, 0.08);
+  border-left: 3px solid var(--color-primary);
+  color: var(--color-primary-light);
+  font-weight: 500;
+}
+
+.practice-preview-footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+
+.practice-more-btn {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.practice-more-btn:hover {
+  color: var(--color-primary);
+}
+
+/* 아티스트 라인업 그리드 */
+.artist-lineup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-md);
+}
+
+.artist-lineup-card {
+  display: flex;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+}
+
+.artist-lineup-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+.artist-lineup-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: #0a0a0f;
+  font-weight: 800;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.artist-lineup-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.artist-lineup-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.artist-lineup-name {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.artist-lineup-bio {
+  font-size: 0.83rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.artist-lineup-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+/* 필터 탭 */
+.filter-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: var(--space-lg);
+}
+
+.filter-tab {
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.filter-tab:hover,
+.filter-tab.active {
+  border-color: var(--color-primary);
+  background: rgba(240, 165, 0, 0.14);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* 연습일지 피드 보강 */
+.post-header-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.post-author-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.post-badges-right {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.linked-stage-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-bottom: var(--space-md);
+  background: rgba(240, 165, 0, 0.08);
+  border: 1px solid rgba(240, 165, 0, 0.3);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+}
+
+.linked-stage-label {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.linked-stage-title {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.post-video-wrapper {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-top: var(--space-md);
+  background: #000;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+/* 무대 상세 (커스텀 스테이지 모니터 & 셋리스트 & 티켓 발권기) */
+.stage-monitor-frame {
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #07070b;
+  box-shadow: var(--shadow-md);
+}
+
+.stage-monitor-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.monitor-brand {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--color-text-muted);
+}
+
+.stage-monitor-frame .player-wrapper {
+  border-radius: 0;
+}
+
+.stage-meta-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-md);
+}
+
+.stage-date-info {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.stage-description-box {
+  padding: var(--space-md);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: 0.92rem;
+  margin-bottom: var(--space-lg);
+  white-space: pre-wrap;
+}
+
+.setlist-card {
+  background: linear-gradient(145deg, #161622, #111118);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.setlist-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: var(--space-md);
+}
+
+.setlist-items {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setlist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(10, 10, 15, 0.55);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+
+.setlist-num {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  min-width: 64px;
+}
+
+.stage-narrative-section {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+.narrative-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.narrative-item {
+  display: flex;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-md);
+}
+
+.narrative-badge-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  min-width: 90px;
+}
+
+.narrative-body-col {
+  flex: 1;
+}
+
+.narrative-text {
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  margin-bottom: 6px;
+  white-space: pre-wrap;
+}
+
+.narrative-date {
+  font-size: 0.76rem;
+  color: var(--color-text-muted);
+}
+
+/* 티켓 발권 패널 */
+.ticket-panel {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  box-shadow: var(--shadow-glow);
+}
+
+.ticket-kicker {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--color-primary);
+}
+
+.ticket-sub {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.ticket-sub strong {
+  color: var(--color-primary);
+}
+
+.issued-ticket-stub {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  background: linear-gradient(135deg, #231c0d, #171520);
+  border: 1px dashed var(--color-primary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.ticket-stub-left {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.stub-venue {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  letter-spacing: 0.1em;
+}
+
+.stub-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.stub-holder {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+.ticket-stub-right {
+  background: rgba(240, 165, 0, 0.15);
+  border-left: 1px dashed var(--color-primary);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 105px;
+}
+
+.stub-label {
+  font-size: 0.68rem;
+  color: var(--color-text-secondary);
+}
+
+.stub-number {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-primary-light);
+}
+
+.ticket-holder-list {
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+}
+
+.holder-list-label {
+  display: block;
+  font-size: 0.76rem;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+
+.holder-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.holder-chip {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+}
+
+.holder-chip strong {
+  color: var(--color-primary);
+}
+
+/* 응원 슬로건 배지 */
+.cheer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.slogan-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.slogan-badge-btn {
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.slogan-badge-btn:hover,
+.slogan-badge-btn.active {
+  border-color: var(--color-primary);
+  background: rgba(240, 165, 0, 0.15);
+  color: var(--color-primary-light);
+  font-weight: 600;
+}
+
+.cheer-badge-tag {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(240, 165, 0, 0.14);
+  color: var(--color-primary-light);
+  font-weight: 600;
+}
+
+.artist-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.profile-cheer-form {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-cheer-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .form-row-2,
+  .profile-cheer-input-row {
+    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 }
