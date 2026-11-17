@@ -33,7 +33,7 @@ export async function GET() {
     }
 }
 
-// POST /api/lives — 새 무대(Stage) 편성 등록 (아티스트 전용)
+// POST /api/lives — 새 무대(Stage) 편성 등록 (유튜브 영상 또는 음원+비주얼 스테이지 모두 지원)
 export async function POST(req: Request) {
     try {
         const session = await auth();
@@ -46,9 +46,16 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "뮤지션만 무대를 등록할 수 있습니다." }, { status: 403 });
         }
 
-        const { title, embedUrl, scheduledAt, setlist, description, status } = await req.json();
-        if (!title || !embedUrl) {
-            return NextResponse.json({ error: "공연 제목과 무대 영상 URL을 입력해주세요." }, { status: 400 });
+        const { title, embedUrl, coverImage, audioUrl, scheduledAt, setlist, description, status } = await req.json();
+        if (!title?.trim()) {
+            return NextResponse.json({ error: "공연 제목을 입력해주세요." }, { status: 400 });
+        }
+
+        if (!embedUrl?.trim() && !audioUrl?.trim() && !coverImage?.trim()) {
+            return NextResponse.json(
+                { error: "유튜브 URL, 무대 음원 파일, 또는 무대 비주얼 이미지 중 최소 1개를 등록해주세요." },
+                { status: 400 }
+            );
         }
 
         const stageStatus = status === "LIVE" ? "LIVE" : "UPCOMING";
@@ -57,7 +64,9 @@ export async function POST(req: Request) {
         const live = await prisma.liveStream.create({
             data: {
                 title: title.trim(),
-                embedUrl: embedUrl.trim(),
+                embedUrl: embedUrl?.trim() || "",
+                coverImage: coverImage?.trim() || null,
+                audioUrl: audioUrl?.trim() || null,
                 scheduledAt: scheduledAt ? new Date(scheduledAt) : new Date(),
                 setlist: setlist?.trim() || null,
                 description: description?.trim() || null,

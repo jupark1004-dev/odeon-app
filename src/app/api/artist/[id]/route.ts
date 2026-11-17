@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/artist/[id] — 아티스트 프로필 + 무대 이력 + 연습일지 + 응원 슬로건
+// GET /api/artist/[id] — 아티스트 프로필 + 무대 이력 + 연습일지(음원/사진 포함) + 응원 슬로건
 export async function GET(
     _req: Request,
     { params }: { params: Promise<{ id: string }> }
@@ -26,6 +26,8 @@ export async function GET(
                     select: {
                         id: true,
                         title: true,
+                        coverImage: true,
+                        audioUrl: true,
                         isLive: true,
                         status: true,
                         scheduledAt: true,
@@ -35,11 +37,13 @@ export async function GET(
                 },
                 posts: {
                     orderBy: { createdAt: "desc" },
-                    take: 6,
+                    take: 8,
                     select: {
                         id: true,
                         content: true,
                         mediaUrl: true,
+                        audioUrl: true,
+                        audioTitle: true,
                         practiceDay: true,
                         category: true,
                         createdAt: true,
@@ -71,7 +75,6 @@ export async function GET(
             return NextResponse.json({ error: "아티스트를 찾을 수 없습니다." }, { status: 404 });
         }
 
-        // 누적 발권 관객 수 합산
         const totalTickets = await prisma.ticket.count({
             where: { stream: { artistId: id } },
         });

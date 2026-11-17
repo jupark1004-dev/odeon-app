@@ -23,7 +23,7 @@ export async function GET() {
             await Promise.all([
                 prisma.user.findUnique({
                     where: { id: artistId },
-                    select: { username: true, genre: true, bio: true },
+                    select: { username: true, genre: true, bio: true, image: true },
                 }),
                 prisma.liveStream.count({ where: { artistId } }),
                 prisma.post.count({ where: { artistId } }),

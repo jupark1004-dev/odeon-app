@@ -14,7 +14,7 @@ export async function GET() {
                 ],
                 take: 6,
                 include: {
-                    artist: { select: { id: true, username: true, genre: true } },
+                    artist: { select: { id: true, username: true, genre: true, image: true } },
                     _count: { select: { tickets: true, cheers: true, practiceLogs: true } },
                 },
             }),
@@ -22,7 +22,7 @@ export async function GET() {
                 orderBy: { createdAt: "desc" },
                 take: 6,
                 include: {
-                    artist: { select: { id: true, username: true, genre: true } },
+                    artist: { select: { id: true, username: true, genre: true, image: true } },
                     stage: { select: { id: true, title: true, scheduledAt: true } },
                 },
             }),
@@ -34,6 +34,7 @@ export async function GET() {
                     username: true,
                     genre: true,
                     bio: true,
+                    image: true,
                     _count: {
                         select: {
                             liveStreams: true,

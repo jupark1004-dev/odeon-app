@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/layout/Header";
+import { compressImageFile, processAudioFile } from "@/lib/media";
 
 interface StageOption {
     id: string;
@@ -12,17 +13,29 @@ interface StageOption {
     artist: { id: string };
 }
 
-const CATEGORIES = ["합주/연습", "보컬/안무", "곡 작업", "백스테이지"];
+const CATEGORIES = [
+    "곡 작업/습작음원",
+    "컨셉/연습사진",
+    "합주/연습",
+    "보컬/안무",
+    "백스테이지",
+];
 
 export default function NewPostPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const [content, setContent] = useState("");
     const [mediaUrl, setMediaUrl] = useState("");
+    const [audioUrl, setAudioUrl] = useState("");
+    const [audioTitle, setAudioTitle] = useState("");
     const [practiceDay, setPracticeDay] = useState(1);
-    const [category, setCategory] = useState("합주/연습");
+    const [category, setCategory] = useState("곡 작업/습작음원");
     const [stageId, setStageId] = useState("");
     const [myStages, setMyStages] = useState<StageOption[]>([]);
+
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const [uploadingAudio, setUploadingAudio] = useState(false);
+    const [audioNotice, setAudioNotice] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
 
@@ -39,6 +52,43 @@ export default function NewPostPage() {
                 }
             });
     }, [userId]);
+
+    const handleImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploadingImage(true);
+        setError("");
+        try {
+            const compressed = await compressImageFile(file, 1080, 0.82);
+            setMediaUrl(compressed);
+        } catch (err) {
+            setError((err as Error).message || "이미지 처리 중 오류가 발생했습니다.");
+        } finally {
+            setUploadingImage(false);
+        }
+    };
+
+    const handleAudioFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploadingAudio(true);
+        setAudioNotice("");
+        setError("");
+        try {
+            if (!audioTitle.trim()) {
+                setAudioTitle(file.name.replace(/\.[^/.]+$/, ""));
+            }
+            const result = await processAudioFile(file);
+            setAudioUrl(result.dataUrl);
+            if (result.notice) {
+                setAudioNotice(result.notice);
+            }
+        } catch (err) {
+            setError((err as Error).message || "음원 파일 처리 중 오류가 발생했습니다.");
+        } finally {
+            setUploadingAudio(false);
+        }
+    };
 
     if (status === "loading") {
         return (
@@ -71,7 +121,7 @@ export default function NewPostPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!content.trim()) {
-            setError("연습 일지 내용을 입력해주세요.");
+            setError("연습/작업 일지 내용을 입력해주세요.");
             return;
         }
         setSubmitting(true);
@@ -84,6 +134,8 @@ export default function NewPostPage() {
                 body: JSON.stringify({
                     content,
                     mediaUrl: mediaUrl.trim() || null,
+                    audioUrl: audioUrl.trim() || null,
+                    audioTitle: audioTitle.trim() || null,
                     practiceDay,
                     category,
                     stageId: stageId || null,
@@ -102,6 +154,8 @@ export default function NewPostPage() {
         }
     };
 
+    const isImagePreview = mediaUrl.startsWith("data:image/") || /\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i.test(mediaUrl);
+
     return (
         <>
             <Header />
@@ -109,14 +163,16 @@ export default function NewPostPage() {
                 <div className="form-page">
                     <div className="form-page-header">
                         <Link href="/posts" className="back-link">← 지하 연습실 피드로 돌아가기</Link>
-                        <h1 className="page-title">📹 지하 연습실 일지 기록</h1>
-                        <p className="page-subtitle">오늘 흘린 땀방울과 연습 영상을 기록해 관객들과 무대까지의 서사를 공유하세요.</p>
+                        <h1 className="page-title">📹 지하 연습실 · 작업실 일지 기록</h1>
+                        <p className="page-subtitle">
+                            연습 영상뿐만 아니라 <strong>습작/데모 음원 파일(.mp3, .wav)</strong>과 <strong>아티스트/연습실 사진</strong>을 직접 올려 서사를 쌓을 수 있습니다.
+                        </p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="post-form">
                         <div className="form-row-2">
                             <div className="form-group">
-                                <label className="form-label">연습 카테고리</label>
+                                <label className="form-label">일지 카테고리</label>
                                 <select
                                     value={category}
                                     onChange={(e) => setCategory(e.target.value)}
@@ -129,7 +185,7 @@ export default function NewPostPage() {
                             </div>
 
                             <div className="form-group">
-                                <label className="form-label">연습 일차 (Day N)</label>
+                                <label className="form-label">연습 · 작업 일차 (Day N)</label>
                                 <input
                                     type="number"
                                     min={1}
@@ -148,7 +204,7 @@ export default function NewPostPage() {
                                 onChange={(e) => setStageId(e.target.value)}
                                 className="form-input"
                             >
-                                <option value="">연결할 예정 무대 없음 (일반 연습 기록)</option>
+                                <option value="">연결할 예정 무대 없음 (일반 연습/습작 기록)</option>
                                 {myStages.map((s) => (
                                     <option key={s.id} value={s.id}>{s.title}</option>
                                 ))}
@@ -156,32 +212,118 @@ export default function NewPostPage() {
                             <p className="form-hint">무대를 연결하면 해당 공연 상세 페이지에 연습 과정 타임라인으로 함께 전시됩니다.</p>
                         </div>
 
-                        <div className="form-group">
-                            <label htmlFor="mediaUrl" className="form-label">
-                                연습 영상(유튜브/쇼츠 URL) 또는 사진 URL (선택)
-                            </label>
-                            <input
-                                id="mediaUrl"
-                                type="url"
-                                value={mediaUrl}
-                                onChange={(e) => setMediaUrl(e.target.value)}
-                                className="form-input"
-                                placeholder="https://www.youtube.com/watch?v=... 또는 이미지 주소"
-                            />
-                            <p className="form-hint">유튜브(일부 공개 포함) 링크를 입력하면 피드에서 즉시 영상 플레이어로 재생됩니다.</p>
+                        {/* 1. 습작 / 데모 음원 업로드 박스 */}
+                        <div className="upload-section-box">
+                            <div className="upload-box-header">
+                                <span className="upload-box-title">🎧 습작 / 데모 음원 첨부 (선택)</span>
+                                <span className="upload-box-badge">MP3 · WAV · M4A · OGG 지원</span>
+                            </div>
+
+                            <div className="form-group" style={{ marginTop: "8px" }}>
+                                <input
+                                    type="text"
+                                    value={audioTitle}
+                                    onChange={(e) => setAudioTitle(e.target.value)}
+                                    className="form-input"
+                                    placeholder="데모 트랙 제목 (예: Track 01. 새벽의 알고리즘 Demo Ver.)"
+                                    maxLength={80}
+                                />
+                            </div>
+
+                            <div className="upload-controls-row">
+                                <label className="file-upload-btn">
+                                    {uploadingAudio ? "음원 최적화 처리 중..." : "🎵 내 기기에서 음원 파일 선택"}
+                                    <input
+                                        type="file"
+                                        accept="audio/*,.mp3,.wav,.m4a,.ogg,.aac"
+                                        onChange={handleAudioFile}
+                                        disabled={uploadingAudio}
+                                        hidden
+                                    />
+                                </label>
+                                {audioUrl && (
+                                    <button
+                                        type="button"
+                                        className="btn-sm btn-danger"
+                                        onClick={() => { setAudioUrl(""); setAudioNotice(""); }}
+                                    >
+                                        음원 제거
+                                    </button>
+                                )}
+                            </div>
+
+                            {audioNotice && (
+                                <p className="form-hint" style={{ color: "#ffc740" }}>💡 {audioNotice}</p>
+                            )}
+
+                            {audioUrl && (
+                                <div className="demo-audio-card" style={{ marginTop: "10px" }}>
+                                    <div className="demo-audio-top">
+                                        <span className="demo-tape-badge">B1F DEMO TAPE</span>
+                                        <span className="demo-audio-title">{audioTitle || "습작 데모 트랙"}</span>
+                                    </div>
+                                    <audio controls src={audioUrl} className="b1f-audio-player" />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 2. 연습 사진 / 아티스트 비주얼 업로드 또는 유튜브 URL */}
+                        <div className="upload-section-box">
+                            <div className="upload-box-header">
+                                <span className="upload-box-title">📸 연습 사진 업로드 또는 영상 URL (선택)</span>
+                                <span className="upload-box-badge">사진 + 음원 동시 첨부 가능</span>
+                            </div>
+
+                            <div className="upload-controls-row" style={{ marginTop: "8px" }}>
+                                <label className="file-upload-btn">
+                                    {uploadingImage ? "사진 압축 중..." : "🖼️ 내 기기에서 사진 파일 선택"}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageFile}
+                                        disabled={uploadingImage}
+                                        hidden
+                                    />
+                                </label>
+                                {mediaUrl && (
+                                    <button
+                                        type="button"
+                                        className="btn-sm btn-danger"
+                                        onClick={() => setMediaUrl("")}
+                                    >
+                                        미디어 제거
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="form-group" style={{ marginTop: "8px" }}>
+                                <input
+                                    type="text"
+                                    value={mediaUrl.startsWith("data:") ? "" : mediaUrl}
+                                    onChange={(e) => setMediaUrl(e.target.value)}
+                                    className="form-input"
+                                    placeholder="또는 유튜브 영상/쇼츠 URL, 외부 이미지 주소 직접 입력"
+                                />
+                            </div>
+
+                            {isImagePreview && (
+                                <div className="uploaded-image-preview">
+                                    <img src={mediaUrl} alt="업로드 미리보기" className="post-media" />
+                                </div>
+                            )}
                         </div>
 
                         <div className="form-group">
                             <label htmlFor="content" className="form-label">
-                                오늘의 연습 노트 ✨
+                                오늘의 작업 · 연습 노트 ✨
                             </label>
                             <textarea
                                 id="content"
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
                                 className="form-textarea"
-                                placeholder="예: 단독 공연 D-5! 오늘 브릿지 구간 드럼-베이스 합을 30번 넘게 다시 맞췄다. 아직 거칠지만 본 무대에서는 완벽하게 터뜨릴 예정."
-                                rows={6}
+                                placeholder="예: 오늘 새벽에 완성한 신곡 1절 보컬 가이드 데모와 컨셉 아트워크입니다. 브릿지 멜로디 라인에 대해 관객분들의 생각이 궁금해요!"
+                                rows={5}
                                 maxLength={800}
                             />
                             <p className="char-count">{content.length} / 800</p>
@@ -196,7 +338,7 @@ export default function NewPostPage() {
                             <button
                                 type="submit"
                                 className="btn btn-primary"
-                                disabled={submitting || !content.trim()}
+                                disabled={submitting || uploadingAudio || uploadingImage || !content.trim()}
                             >
                                 {submitting ? "기록 중..." : "연습일지 남기기"}
                             </button>

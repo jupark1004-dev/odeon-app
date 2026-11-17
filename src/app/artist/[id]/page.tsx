@@ -17,6 +17,8 @@ interface ArtistProfile {
     liveStreams: {
         id: string;
         title: string;
+        coverImage: string | null;
+        audioUrl: string | null;
         isLive: boolean;
         status: string;
         scheduledAt: string;
@@ -27,6 +29,8 @@ interface ArtistProfile {
         id: string;
         content: string;
         mediaUrl: string | null;
+        audioUrl: string | null;
+        audioTitle: string | null;
         practiceDay: number;
         category: string;
         createdAt: string;
@@ -133,8 +137,12 @@ export default function ArtistProfilePage() {
             <main className="page-container">
                 {/* 프로필 헤더 */}
                 <div className="artist-profile-header">
-                    <div className="artist-avatar-lg">
-                        {(artist.username ?? "?")[0].toUpperCase()}
+                    <div className="artist-avatar-lg" style={{ overflow: "hidden" }}>
+                        {artist.image ? (
+                            <img src={artist.image} alt={artist.username ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                            (artist.username ?? "?")[0].toUpperCase()
+                        )}
                     </div>
                     <div className="artist-profile-info">
                         <div className="artist-name-row">
@@ -145,7 +153,7 @@ export default function ArtistProfilePage() {
                         <div className="artist-profile-stats">
                             <span>🎟️ 누적 관객 <strong>{artist.totalTickets}명</strong></span>
                             <span>🎸 무대 <strong>{artist._count.liveStreams}회</strong></span>
-                            <span>📹 연습일지 <strong>{artist._count.posts}편</strong></span>
+                            <span>📹 연습·습작 일지 <strong>{artist._count.posts}편</strong></span>
                             <span>🙌 응원 슬로건 <strong>{artist._count.receivedCheers}개</strong></span>
                         </div>
                     </div>
@@ -171,15 +179,15 @@ export default function ArtistProfilePage() {
                     </section>
                 )}
 
-                {/* 지하 연습실 일지 */}
+                {/* 지하 연습실 / 작업실 일지 */}
                 {artist.posts.length > 0 && (
                     <section className="profile-section">
-                        <h2 className="section-title">📹 지하 연습실 성장 일지</h2>
+                        <h2 className="section-title">📹 지하 연습실 · 습작 음원 일지</h2>
                         <div className="profile-posts">
                             {artist.posts.map((post) => (
                                 <div key={post.id} className="post-card">
                                     <div className="post-header">
-                                        <span className="practice-day-badge">🔥 연습 Day {post.practiceDay}</span>
+                                        <span className="practice-day-badge">🔥 Day {post.practiceDay}</span>
                                         <span className="practice-cat-badge">{post.category}</span>
                                         <span className="post-time" style={{ marginLeft: "auto" }}>{timeAgo(post.createdAt)}</span>
                                     </div>
@@ -189,6 +197,18 @@ export default function ArtistProfilePage() {
                                         </Link>
                                     )}
                                     <p className="post-content">{post.content}</p>
+                                    {post.audioUrl && (
+                                        <div className="demo-audio-card">
+                                            <div className="demo-audio-top">
+                                                <span className="demo-tape-badge">🎧 B1F STUDIO DEMO</span>
+                                                <span className="demo-audio-title">{post.audioTitle || "습작 데모 트랙"}</span>
+                                            </div>
+                                            <audio controls src={post.audioUrl} className="b1f-audio-player" />
+                                        </div>
+                                    )}
+                                    {post.mediaUrl && (
+                                        <img src={post.mediaUrl} alt="연습 사진" className="post-media" />
+                                    )}
                                 </div>
                             ))}
                         </div>

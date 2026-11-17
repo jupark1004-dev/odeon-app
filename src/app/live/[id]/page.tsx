@@ -25,6 +25,8 @@ interface PracticeLogItem {
     id: string;
     content: string;
     mediaUrl: string | null;
+    audioUrl: string | null;
+    audioTitle: string | null;
     practiceDay: number;
     category: string;
     createdAt: string;
@@ -34,12 +36,14 @@ interface LiveDetail {
     id: string;
     title: string;
     embedUrl: string;
+    coverImage: string | null;
+    audioUrl: string | null;
     isLive: boolean;
     status: string;
     scheduledAt: string;
     setlist: string | null;
     description: string | null;
-    artist: { id: string; username: string | null; genre: string | null; bio: string | null };
+    artist: { id: string; username: string | null; genre: string | null; bio: string | null; image: string | null };
     tickets: TicketItem[];
     cheers: CheerItem[];
     practiceLogs: PracticeLogItem[];
@@ -49,22 +53,24 @@ const SLOGAN_BADGES = [
     "🔥 무대찢음",
     "🕯️ 1열대기",
     "💪 땀방울증인",
-    "🎸 미친연주",
+    "🎸 미친사운드",
     "✨ 입덕완료",
 ];
 
-function getYoutubeEmbedUrl(url: string): string {
+function getYoutubeEmbedUrl(url: string): string | null {
+    if (!url) return null;
     const regexps = [
         /youtube\.com\/watch\?v=([^&]+)/,
         /youtu\.be\/([^?]+)/,
         /youtube\.com\/shorts\/([^?]+)/,
+        /youtube\.com\/embed\/([^?]+)/,
         /youtube\.com\/live\/([^?]+)/,
     ];
     for (const re of regexps) {
         const match = url.match(re);
         if (match) return `https://www.youtube.com/embed/${match[1]}?autoplay=0&rel=0&modestbranding=1`;
     }
-    return url;
+    return null;
 }
 
 export default function LiveDetailPage() {
@@ -171,7 +177,8 @@ export default function LiveDetailPage() {
         );
     }
 
-    const embedUrl = getYoutubeEmbedUrl(live.embedUrl);
+    const ytEmbedUrl = getYoutubeEmbedUrl(live.embedUrl);
+    const visualCover = live.coverImage || live.artist.image;
     const setlistLines = live.setlist
         ? live.setlist.split("\n").map((s) => s.trim()).filter(Boolean)
         : [];
@@ -190,15 +197,41 @@ export default function LiveDetailPage() {
                                     {live.isLive ? "🔴 LIVE ON AIR" : live.status === "ENDED" ? "📼 ARCHIVED STAGE" : "🎟️ UPCOMING STAGE"}
                                 </span>
                             </div>
-                            <div className="player-wrapper">
-                                <iframe
-                                    src={embedUrl}
-                                    title={live.title}
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                    className="youtube-iframe"
-                                />
-                            </div>
+
+                            {/* 유튜브 영상이 있으면 영상 재생, 없으면 비주얼 & 오디오 스테이지 렌더링 */}
+                            {ytEmbedUrl ? (
+                                <div className="player-wrapper">
+                                    <iframe
+                                        src={ytEmbedUrl}
+                                        title={live.title}
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                        className="youtube-iframe"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="visual-audio-stage">
+                                    {visualCover ? (
+                                        <img src={visualCover} alt={live.title} className="visual-stage-img" />
+                                    ) : (
+                                        <div className="visual-stage-placeholder">
+                                            <span className="visual-stage-icon">🎧</span>
+                                            <p>{live.artist.username} — B1F AUDIO SHOWCASE</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* 무대 전용 음원이 등록된 경우 모니터 하단에 마스터 오디오 데크 표시 */}
+                            {live.audioUrl && (
+                                <div className="stage-audio-deck">
+                                    <div className="demo-audio-top">
+                                        <span className="demo-tape-badge">🎧 B1F STAGE MASTER AUDIO</span>
+                                        <span className="demo-audio-title">{live.title}</span>
+                                    </div>
+                                    <audio controls src={live.audioUrl} className="b1f-audio-player" />
+                                </div>
+                            )}
                         </div>
 
                         <div className="live-detail-info">
@@ -236,13 +269,13 @@ export default function LiveDetailPage() {
                                 </div>
                             )}
 
-                            {/* 이 무대를 만든 땀방울 (연습일지 타임라인) */}
+                            {/* 이 무대를 만든 땀방울 (연습일지 · 습작음원 타임라인) */}
                             <div className="stage-narrative-section">
                                 <div className="section-header-row">
                                     <div>
                                         <span className="section-kicker">BEHIND THE STAGE</span>
                                         <h2 className="panel-title" style={{ marginBottom: 0 }}>
-                                            📹 이 무대를 위해 흘린 지하 연습실 기록 ({live.practiceLogs.length}편)
+                                            📹 이 무대를 위해 쌓아 올린 연습실 · 습작 일지 ({live.practiceLogs.length}편)
                                         </h2>
                                     </div>
                                     <Link href="/posts" className="section-more-link">연습실 전체 보기 →</Link>
@@ -260,6 +293,18 @@ export default function LiveDetailPage() {
                                                 </div>
                                                 <div className="narrative-body-col">
                                                     <p className="narrative-text">{log.content}</p>
+                                                    {log.audioUrl && (
+                                                        <div className="demo-audio-card" style={{ marginBottom: "8px" }}>
+                                                            <div className="demo-audio-top">
+                                                                <span className="demo-tape-badge">🎧 DEMO</span>
+                                                                <span className="demo-audio-title">{log.audioTitle || "습작 데모 음원"}</span>
+                                                            </div>
+                                                            <audio controls src={log.audioUrl} className="b1f-audio-player" />
+                                                        </div>
+                                                    )}
+                                                    {log.mediaUrl && !getYoutubeEmbedUrl(log.mediaUrl) && (
+                                                        <img src={log.mediaUrl} alt="연습 사진" className="post-media" style={{ maxHeight: "220px", marginBottom: "8px" }} />
+                                                    )}
                                                     <span className="narrative-date">
                                                         {new Date(log.createdAt).toLocaleDateString("ko-KR")} 기록
                                                     </span>

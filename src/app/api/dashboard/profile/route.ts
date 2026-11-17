@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// PATCH /api/dashboard/profile — 아티스트 프로필(팀명, 장르, 소개) 수정
+// PATCH /api/dashboard/profile — 아티스트 프로필(팀명, 장르, 소개, 대표 이미지) 수정
 export async function PATCH(req: Request) {
     try {
         const session = await auth();
@@ -15,7 +15,7 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ error: "뮤지션만 수정할 수 있습니다." }, { status: 403 });
         }
 
-        const { username, genre, bio } = await req.json();
+        const { username, genre, bio, image } = await req.json();
         if (!username?.trim()) {
             return NextResponse.json({ error: "활동명(팀명)을 입력해주세요." }, { status: 400 });
         }
@@ -26,12 +26,14 @@ export async function PATCH(req: Request) {
                 username: username.trim(),
                 genre: genre?.trim() || null,
                 bio: bio?.trim() || null,
+                ...(image !== undefined ? { image: image || null } : {}),
             },
             select: {
                 id: true,
                 username: true,
                 genre: true,
                 bio: true,
+                image: true,
             },
         });
 

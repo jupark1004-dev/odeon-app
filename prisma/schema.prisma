@@ -15,9 +15,9 @@ model User {
   password       String?   // bcrypt 해시 저장 (소셜 로그인 시 null 가능)
   username       String?   // 활동명 / 팀명 / 닉네임
   role           String    @default("FAN")  // 'ARTIST' 또는 'FAN'
-  genre          String?   // 예: '인디 밴드', '지하아이돌', '싱어송라이터', '보컬', '악기/세션'
+  genre          String?   // 예: 'AI 버추얼 싱어', '인디 밴드', '지하아이돌', '싱어송라이터'
   bio            String?   // 아티스트 소개 및 팀 서사
-  image          String?   // 프로필 이미지 URL
+  image          String?   // 프로필 이미지 (업로드 Data URL 또는 외부 URL)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -41,7 +41,7 @@ model Account {
   provider          String
   providerAccountId String
   refresh_token     String?
-  access_token      String?
+  access_token     String?
   expires_at        Int?
   token_type        String?
   scope             String?
@@ -72,13 +72,15 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// 2. B1F 라이브하우스 무대 (공연 예고 / 실시간 무대 / 무대 아카이브)
+// 2. B1F 라이브하우스 무대 (공연 예고 / 실시간 무대 / 음원 리스닝 스테이지)
 model LiveStream {
   id           String    @id @default(uuid())
   artistId     String
   artist       User      @relation(fields: [artistId], references: [id], onDelete: Cascade)
   title        String
-  embedUrl     String    // 무대 영상 또는 라이브 스트림 URL
+  embedUrl     String    @default("") // 유튜브 URL (없을 경우 음원+비주얼 스테이지로 동작)
+  coverImage   String?   // 무대 비주얼 / 아티스트 이미지
+  audioUrl     String?   // 직접 업로드한 무대 음원 또는 오디오 URL
   isLive       Boolean   @default(false)
   status       String    @default("UPCOMING") // 'UPCOMING' | 'LIVE' | 'ENDED'
   scheduledAt  DateTime  @default(now())      // 공연 일시 (타임테이블 & D-Day용)
@@ -91,16 +93,18 @@ model LiveStream {
   practiceLogs Post[]
 }
 
-// 3. 지하 연습실 일지 (Practice Log — 무대를 향한 땀방울 기록)
+// 3. 지하 연습실 / 작업실 일지 (Practice Log — 습작 음원 + 연습/컨셉 사진 + 영상 기록)
 model Post {
   id          String      @id @default(uuid())
   artistId    String
   artist      User        @relation(fields: [artistId], references: [id], onDelete: Cascade)
   content     String      // 오늘의 연습 일지 / 작업 노트
-  mediaUrl    String?     // 연습 영상(유튜브 URL) 또는 이미지 URL
-  practiceDay Int         @default(1)          // 연습 N일차 (예: Day 14)
-  category    String      @default("합주/연습") // '합주/연습' | '보컬/안무' | '곡 작업' | '백스테이지'
-  stageId     String?     // 어떤 무대를 준비하는 연습인지 연결
+  mediaUrl    String?     // 연습/컨셉 사진(업로드) 또는 유튜브 영상 URL
+  audioUrl    String?     // 습작/데모 음원 파일(업로드) 또는 오디오 URL
+  audioTitle  String?     // 습작 음원 트랙명 (예: "Demo #3 - 새벽의 목소리 (Rough Mix)")
+  practiceDay Int         @default(1)          // 연습/작업 N일차 (예: Day 14)
+  category    String      @default("합주/연습") // '곡 작업/습작음원' | '컨셉/연습사진' | '합주/연습' | '보컬/안무' | '백스테이지'
+  stageId     String?     // 어떤 무대를 준비하는 과정인지 연결
   stage       LiveStream? @relation(fields: [stageId], references: [id], onDelete: SetNull)
   createdAt   DateTime    @default(now())
 }

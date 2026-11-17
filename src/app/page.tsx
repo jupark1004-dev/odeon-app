@@ -7,10 +7,12 @@ import Header from "@/components/layout/Header";
 interface StageItem {
     id: string;
     title: string;
+    coverImage: string | null;
+    audioUrl: string | null;
     isLive: boolean;
     status: string;
     scheduledAt: string;
-    artist: { id: string; username: string | null; genre: string | null };
+    artist: { id: string; username: string | null; genre: string | null; image: string | null };
     _count: { tickets: number; cheers: number; practiceLogs: number };
 }
 
@@ -18,10 +20,12 @@ interface PracticeLogItem {
     id: string;
     content: string;
     mediaUrl: string | null;
+    audioUrl: string | null;
+    audioTitle: string | null;
     practiceDay: number;
     category: string;
     createdAt: string;
-    artist: { id: string; username: string | null; genre: string | null };
+    artist: { id: string; username: string | null; genre: string | null; image: string | null };
     stage: { id: string; title: string; scheduledAt: string } | null;
 }
 
@@ -30,6 +34,7 @@ interface ArtistItem {
     username: string | null;
     genre: string | null;
     bio: string | null;
+    image: string | null;
     _count: { liveStreams: number; posts: number; receivedCheers: number };
 }
 
@@ -123,16 +128,30 @@ export default function HomePage() {
                                     const dday = getDdayLabel(stage.scheduledAt, stage.status, stage.isLive);
                                     return (
                                         <div key={stage.id} className="stage-card">
-                                            <Link href={`/live/${stage.id}`} className="stage-card-top">
+                                            <Link
+                                                href={`/live/${stage.id}`}
+                                                className="stage-card-top"
+                                                style={
+                                                    stage.coverImage
+                                                        ? {
+                                                              backgroundImage: `linear-gradient(to bottom, rgba(10,10,15,0.45), rgba(10,10,15,0.85)), url(${stage.coverImage})`,
+                                                              backgroundSize: "cover",
+                                                              backgroundPosition: "center",
+                                                          }
+                                                        : undefined
+                                                }
+                                            >
                                                 <span className={`stage-status-pill ${stage.isLive ? "live" : stage.status === "ENDED" ? "ended" : "upcoming"}`}>
                                                     {dday}
                                                 </span>
                                                 <span className="stage-schedule-text">
                                                     {formatSchedule(stage.scheduledAt)}
                                                 </span>
-                                                <div className="stage-poster-icon">
-                                                    {stage.isLive ? "🔥" : stage.status === "ENDED" ? "📼" : "🎤"}
-                                                </div>
+                                                {!stage.coverImage && (
+                                                    <div className="stage-poster-icon">
+                                                        {stage.isLive ? "🔥" : stage.status === "ENDED" ? "📼" : "🎤"}
+                                                    </div>
+                                                )}
                                                 <div className="stage-practice-pill">
                                                     📹 연습일지 {stage._count.practiceLogs}편 누적
                                                 </div>
@@ -186,8 +205,12 @@ export default function HomePage() {
                                         <div className="practice-preview-top">
                                             <span className="practice-day-badge">DAY {log.practiceDay}</span>
                                             <span className="practice-cat-badge">{log.category}</span>
+                                            {log.audioUrl && <span className="demo-tape-badge">🎧 데모음원</span>}
                                         </div>
                                         <p className="practice-preview-content">{log.content}</p>
+                                        {log.audioUrl && (
+                                            <audio controls src={log.audioUrl} className="b1f-audio-player" />
+                                        )}
                                         {log.stage && (
                                             <Link href={`/live/${log.stage.id}`} className="practice-target-stage">
                                                 🎯 목표 무대: {log.stage.title}
@@ -218,8 +241,12 @@ export default function HomePage() {
                             <div className="artist-lineup-grid">
                                 {artists.map((artist) => (
                                     <Link href={`/artist/${artist.id}`} key={artist.id} className="artist-lineup-card">
-                                        <div className="artist-lineup-avatar">
-                                            {(artist.username ?? "?")[0].toUpperCase()}
+                                        <div className="artist-lineup-avatar" style={{ overflow: "hidden" }}>
+                                            {artist.image ? (
+                                                <img src={artist.image} alt={artist.username ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                            ) : (
+                                                (artist.username ?? "?")[0].toUpperCase()
+                                            )}
                                         </div>
                                         <div className="artist-lineup-info">
                                             <div className="artist-lineup-name-row">

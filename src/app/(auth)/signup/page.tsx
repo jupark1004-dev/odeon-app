@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const GENRE_OPTIONS = [
+    "AI 버추얼 싱어 / 프로듀서",
     "지하아이돌 / 퍼포먼스팀",
     "인디 밴드 / 록",
     "싱어송라이터",

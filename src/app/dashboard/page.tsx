@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { compressImageFile } from "@/lib/media";
 
 interface Summary {
-    artist: { username: string | null; genre: string | null; bio: string | null } | null;
+    artist: { username: string | null; genre: string | null; bio: string | null; image: string | null } | null;
     totalTickets: number;
     cheerCount: number;
     liveCount: number;
@@ -28,6 +29,7 @@ interface Summary {
 }
 
 const GENRE_OPTIONS = [
+    "AI 버추얼 싱어 / 프로듀서",
     "지하아이돌 / 퍼포먼스팀",
     "인디 밴드 / 록",
     "싱어송라이터",
@@ -58,6 +60,8 @@ export default function DashboardPage() {
     const [username, setUsername] = useState("");
     const [genre, setGenre] = useState(GENRE_OPTIONS[0]);
     const [bio, setBio] = useState("");
+    const [image, setImage] = useState("");
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [savingProfile, setSavingProfile] = useState(false);
     const [profileMsg, setProfileMsg] = useState("");
 
@@ -70,10 +74,23 @@ export default function DashboardPage() {
                     setUsername(data.artist.username ?? "");
                     setGenre(data.artist.genre || GENRE_OPTIONS[0]);
                     setBio(data.artist.bio ?? "");
+                    setImage(data.artist.image ?? "");
                 }
             })
             .finally(() => setLoading(false));
     }, []);
+
+    const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploadingAvatar(true);
+        try {
+            const compressed = await compressImageFile(file, 600, 0.85);
+            setImage(compressed);
+        } finally {
+            setUploadingAvatar(false);
+        }
+    };
 
     const handleSaveProfile = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -83,11 +100,11 @@ export default function DashboardPage() {
             const res = await fetch("/api/dashboard/profile", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, genre, bio }),
+                body: JSON.stringify({ username, genre, bio, image }),
             });
             const data = await res.json();
             if (res.ok) {
-                setProfileMsg("✅ 프로필이 업데이트되었습니다.");
+                setProfileMsg("✅ 프로필 및 아티스트 이미지가 업데이트되었습니다.");
                 setSummary((prev) => (prev ? { ...prev, artist: data.artist } : prev));
                 setEditingProfile(false);
             } else {
@@ -127,7 +144,7 @@ export default function DashboardPage() {
                 <div className="stat-card">
                     <p className="stat-label">지하 연습실 일지</p>
                     <p className="stat-value">📹 {summary.postCount}</p>
-                    <p className="stat-sub">누적 연습 기록</p>
+                    <p className="stat-sub">누적 연습 · 습작 기록</p>
                 </div>
                 <div className="stat-card">
                     <p className="stat-label">라이브하우스 무대</p>
@@ -144,7 +161,7 @@ export default function DashboardPage() {
             {/* 빠른 액션 */}
             <div className="quick-actions">
                 <Link href="/posts/new" className="btn btn-primary">
-                    📹 오늘 연습일지 기록하기
+                    🎧 연습일지 · 습작음원 올리기
                 </Link>
                 <Link href="/dashboard/live/new" className="btn btn-secondary">
                     🎸 새 라이브 무대 편성
@@ -154,7 +171,7 @@ export default function DashboardPage() {
                     className="btn btn-secondary"
                     onClick={() => setEditingProfile((v) => !v)}
                 >
-                    ✏️ 팀 프로필 · 소개 수정
+                    ✏️ 아티스트 이미지 · 프로필 수정
                 </button>
             </div>
 
@@ -167,10 +184,30 @@ export default function DashboardPage() {
             {/* 프로필 편집 폼 */}
             {editingProfile && (
                 <form onSubmit={handleSaveProfile} className="profile-cheer-form" style={{ marginBottom: "32px" }}>
-                    <h2 className="section-title" style={{ marginBottom: "4px" }}>✏️ 아티스트 프로필 수정</h2>
+                    <h2 className="section-title" style={{ marginBottom: "4px" }}>✏️ 아티스트 프로필 · 대표 이미지 수정</h2>
+                    <div className="avatar-upload-row">
+                        <div className="artist-avatar-lg" style={{ overflow: "hidden", width: "68px", height: "68px" }}>
+                            {image ? (
+                                <img src={image} alt="아티스트 이미지" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            ) : (
+                                (username || "?")[0].toUpperCase()
+                            )}
+                        </div>
+                        <div className="upload-controls-row">
+                            <label className="file-upload-btn">
+                                {uploadingAvatar ? "이미지 처리 중..." : "🖼️ 대표 프로필 사진 선택"}
+                                <input type="file" accept="image/*" onChange={handleAvatarFile} hidden />
+                            </label>
+                            {image && (
+                                <button type="button" className="btn-sm btn-danger" onClick={() => setImage("")}>
+                                    사진 삭제
+                                </button>
+                            )}
+                        </div>
+                    </div>
                     <div className="form-row-2">
                         <div className="form-group">
-                            <label className="form-label">팀명 / 활동명</label>
+                            <label className="form-label">팀명 / 아티스트 활동명</label>
                             <input
                                 type="text"
                                 value={username}
@@ -193,7 +230,7 @@ export default function DashboardPage() {
                         </div>
                     </div>
                     <div className="form-group">
-                        <label className="form-label">팀 소개 & 무대 각오</label>
+                        <label className="form-label">아티스트 소개 & 무대 각오</label>
                         <input
                             type="text"
                             value={bio}
@@ -207,7 +244,7 @@ export default function DashboardPage() {
                         <button type="button" className="btn-sm btn-outline" onClick={() => setEditingProfile(false)}>
                             취소
                         </button>
-                        <button type="submit" className="btn-sm btn-live" disabled={savingProfile}>
+                        <button type="submit" className="btn-sm btn-live" disabled={savingProfile || uploadingAvatar}>
                             {savingProfile ? "저장 중..." : "프로필 저장"}
                         </button>
                     </div>

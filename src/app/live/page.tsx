@@ -8,6 +8,8 @@ interface LiveStream {
     id: string;
     title: string;
     embedUrl: string;
+    coverImage: string | null;
+    audioUrl: string | null;
     isLive: boolean;
     status: string;
     scheduledAt: string;
@@ -114,16 +116,30 @@ export default function LiveListPage() {
                             const dday = getDdayLabel(stage.scheduledAt, stage.status, stage.isLive);
                             return (
                                 <div key={stage.id} className="stage-card">
-                                    <Link href={`/live/${stage.id}`} className="stage-card-top">
+                                    <Link
+                                        href={`/live/${stage.id}`}
+                                        className="stage-card-top"
+                                        style={
+                                            stage.coverImage
+                                                ? {
+                                                      backgroundImage: `linear-gradient(to bottom, rgba(10,10,15,0.45), rgba(10,10,15,0.85)), url(${stage.coverImage})`,
+                                                      backgroundSize: "cover",
+                                                      backgroundPosition: "center",
+                                                  }
+                                                : undefined
+                                        }
+                                    >
                                         <span className={`stage-status-pill ${stage.isLive ? "live" : stage.status === "ENDED" ? "ended" : "upcoming"}`}>
                                             {dday}
                                         </span>
                                         <span className="stage-schedule-text">
                                             {formatSchedule(stage.scheduledAt)}
                                         </span>
-                                        <div className="stage-poster-icon">
-                                            {stage.isLive ? "🔥" : stage.status === "ENDED" ? "📼" : "🎤"}
-                                        </div>
+                                        {!stage.coverImage && (
+                                            <div className="stage-poster-icon">
+                                                {stage.isLive ? "🔥" : stage.status === "ENDED" ? "📼" : "🎤"}
+                                            </div>
+                                        )}
                                         <div className="stage-practice-pill">
                                             📹 연습일지 {stage._count.practiceLogs}편 누적
                                         </div>

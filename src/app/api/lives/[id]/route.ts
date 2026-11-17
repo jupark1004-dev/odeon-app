@@ -15,7 +15,7 @@ export async function GET(
             where: { id },
             include: {
                 artist: {
-                    select: { id: true, username: true, genre: true, bio: true },
+                    select: { id: true, username: true, genre: true, bio: true, image: true },
                 },
                 tickets: {
                     orderBy: { entryNumber: "asc" },
@@ -36,6 +36,8 @@ export async function GET(
                         id: true,
                         content: true,
                         mediaUrl: true,
+                        audioUrl: true,
+                        audioTitle: true,
                         practiceDay: true,
                         category: true,
                         createdAt: true,
