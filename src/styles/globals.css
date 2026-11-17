@@ -1063,9 +1063,13 @@ img {
 .post-media {
   margin-top: var(--space-md);
   border-radius: var(--radius-md);
-  max-height: 400px;
-  width: 100%;
-  object-fit: cover;
+  max-height: 640px;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  background: #08080d;
+  border: 1px solid var(--color-border);
 }
 
 /* ============================================================

@@ -107,6 +107,7 @@ export default function DashboardPage() {
                 setProfileMsg("✅ 프로필 및 아티스트 이미지가 업데이트되었습니다.");
                 setSummary((prev) => (prev ? { ...prev, artist: data.artist } : prev));
                 setEditingProfile(false);
+                window.dispatchEvent(new Event("b1f-profile-updated"));
             } else {
                 setProfileMsg(`❌ ${data.error}`);
             }

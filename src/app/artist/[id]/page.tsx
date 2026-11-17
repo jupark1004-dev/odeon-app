@@ -5,6 +5,7 @@ import Link from "next/link";
 import Header from "@/components/layout/Header";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { compressImageFile } from "@/lib/media";
 
 interface ArtistProfile {
     id: string;
@@ -46,6 +47,16 @@ interface ArtistProfile {
     _count: { liveStreams: number; posts: number; receivedCheers: number };
 }
 
+const GENRE_OPTIONS = [
+    "AI 버추얼 싱어 / 프로듀서",
+    "지하아이돌 / 퍼포먼스팀",
+    "인디 밴드 / 록",
+    "싱어송라이터",
+    "보컬리스트",
+    "피아노 / 기타 / 세션",
+    "힙합 / R&B / 일렉트로닉",
+];
+
 const SLOGAN_BADGES = [
     "🔥 최애뮤지션",
     "🕯️ 1열대기",
@@ -70,20 +81,90 @@ export default function ArtistProfilePage() {
     const [artist, setArtist] = useState<ArtistProfile | null>(null);
     const [loading, setLoading] = useState(true);
 
+    // 본인 프로필 바로 수정 상태
+    const [editingProfile, setEditingProfile] = useState(false);
+    const [editUsername, setEditUsername] = useState("");
+    const [editGenre, setEditGenre] = useState(GENRE_OPTIONS[0]);
+    const [editBio, setEditBio] = useState("");
+    const [editImage, setEditImage] = useState("");
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [savingProfile, setSavingProfile] = useState(false);
+    const [profileNotice, setProfileNotice] = useState("");
+
     const [badge, setBadge] = useState(SLOGAN_BADGES[0]);
     const [message, setMessage] = useState("");
     const [sending, setSending] = useState(false);
 
+    const currentUserId = (session?.user as { id?: string })?.id;
+    const isOwner = Boolean(currentUserId && artist && currentUserId === artist.id);
+
     const loadArtist = useCallback(() => {
         fetch(`/api/artist/${params.id}`)
             .then((r) => r.json())
-            .then(setArtist)
+            .then((data: ArtistProfile) => {
+                setArtist(data);
+                if (data && !("error" in (data as object))) {
+                    setEditUsername(data.username ?? "");
+                    setEditGenre(data.genre || GENRE_OPTIONS[0]);
+                    setEditBio(data.bio ?? "");
+                    setEditImage(data.image ?? "");
+                }
+            })
             .finally(() => setLoading(false));
     }, [params.id]);
 
     useEffect(() => {
         loadArtist();
     }, [loadArtist]);
+
+    const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploadingAvatar(true);
+        try {
+            const compressed = await compressImageFile(file, 600, 0.85);
+            setEditImage(compressed);
+        } finally {
+            setUploadingAvatar(false);
+        }
+    };
+
+    const handleSaveProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSavingProfile(true);
+        setProfileNotice("");
+        try {
+            const res = await fetch("/api/dashboard/profile", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: editUsername,
+                    genre: editGenre,
+                    bio: editBio,
+                    image: editImage,
+                }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setProfileNotice("✅ 아티스트 이름과 프로필이 변경되었습니다!");
+                setEditingProfile(false);
+                loadArtist();
+                window.dispatchEvent(new Event("b1f-profile-updated"));
+            } else {
+                setProfileNotice(`❌ ${data.error}`);
+            }
+        } finally {
+            setSavingProfile(false);
+        }
+    };
+
+    const handleDeletePost = async (postId: string) => {
+        if (!confirm("이 연습일지를 삭제하시겠습니까?")) return;
+        const res = await fetch(`/api/posts/${postId}`, { method: "DELETE" });
+        if (res.ok) {
+            loadArtist();
+        }
+    };
 
     const handleCheer = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -144,10 +225,19 @@ export default function ArtistProfilePage() {
                             (artist.username ?? "?")[0].toUpperCase()
                         )}
                     </div>
-                    <div className="artist-profile-info">
+                    <div className="artist-profile-info" style={{ flex: 1 }}>
                         <div className="artist-name-row">
                             <h1 className="artist-profile-name">{artist.username}</h1>
                             {artist.genre && <span className="genre-mini-tag">{artist.genre}</span>}
+                            {isOwner && (
+                                <button
+                                    type="button"
+                                    className="btn-sm btn-live"
+                                    onClick={() => setEditingProfile((v) => !v)}
+                                >
+                                    ✏️ 이름 · 프로필 사진 변경
+                                </button>
+                            )}
                         </div>
                         {artist.bio && <p className="artist-profile-bio">{artist.bio}</p>}
                         <div className="artist-profile-stats">
@@ -158,6 +248,86 @@ export default function ArtistProfilePage() {
                         </div>
                     </div>
                 </div>
+
+                {profileNotice && (
+                    <p className="donate-result success" style={{ marginBottom: "20px" }}>
+                        {profileNotice}
+                    </p>
+                )}
+
+                {/* 본인일 때 바로 열리는 프로필 수정 폼 */}
+                {isOwner && editingProfile && (
+                    <form onSubmit={handleSaveProfile} className="profile-cheer-form" style={{ marginBottom: "32px" }}>
+                        <h2 className="section-title" style={{ marginBottom: "4px" }}>✏️ 아티스트 활동명 · 대표 사진 · 소개 수정</h2>
+                        <div className="avatar-upload-row">
+                            <div className="artist-avatar-lg" style={{ overflow: "hidden", width: "68px", height: "68px" }}>
+                                {editImage ? (
+                                    <img src={editImage} alt="프로필 미리보기" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                ) : (
+                                    (editUsername || "?")[0].toUpperCase()
+                                )}
+                            </div>
+                            <div className="upload-controls-row">
+                                <label className="file-upload-btn">
+                                    {uploadingAvatar ? "사진 처리 중..." : "🖼️ 대표 프로필 사진 선택"}
+                                    <input type="file" accept="image/*" onChange={handleAvatarFile} hidden />
+                                </label>
+                                {editImage && (
+                                    <button type="button" className="btn-sm btn-danger" onClick={() => setEditImage("")}>
+                                        기본 아이콘으로
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="form-row-2">
+                            <div className="form-group">
+                                <label className="form-label">아티스트 활동명 (예: 서안)</label>
+                                <input
+                                    type="text"
+                                    value={editUsername}
+                                    onChange={(e) => setEditUsername(e.target.value)}
+                                    className="form-input"
+                                    placeholder="변경할 아티스트 이름을 입력하세요"
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">활동 분야 / 장르</label>
+                                <select
+                                    value={editGenre}
+                                    onChange={(e) => setEditGenre(e.target.value)}
+                                    className="form-input"
+                                >
+                                    {GENRE_OPTIONS.map((g) => (
+                                        <option key={g} value={g}>{g}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">아티스트 소개글</label>
+                            <input
+                                type="text"
+                                value={editBio}
+                                onChange={(e) => setEditBio(e.target.value)}
+                                className="form-input"
+                                maxLength={150}
+                                placeholder="아티스트의 세계관이나 음악 스타일을 소개해주세요"
+                            />
+                        </div>
+
+                        <div className="form-actions">
+                            <button type="button" className="btn-sm btn-outline" onClick={() => setEditingProfile(false)}>
+                                취소
+                            </button>
+                            <button type="submit" className="btn-sm btn-live" disabled={savingProfile || uploadingAvatar}>
+                                {savingProfile ? "저장 중..." : "변경사항 저장"}
+                            </button>
+                        </div>
+                    </form>
+                )}
 
                 {/* 라이브하우스 무대 목록 */}
                 {artist.liveStreams.length > 0 && (
@@ -190,6 +360,15 @@ export default function ArtistProfilePage() {
                                         <span className="practice-day-badge">🔥 Day {post.practiceDay}</span>
                                         <span className="practice-cat-badge">{post.category}</span>
                                         <span className="post-time" style={{ marginLeft: "auto" }}>{timeAgo(post.createdAt)}</span>
+                                        {isOwner && (
+                                            <button
+                                                type="button"
+                                                className="btn-sm btn-danger"
+                                                onClick={() => handleDeletePost(post.id)}
+                                            >
+                                                삭제
+                                            </button>
+                                        )}
                                     </div>
                                     {post.stage && (
                                         <Link href={`/live/${post.stage.id}`} className="linked-stage-banner">

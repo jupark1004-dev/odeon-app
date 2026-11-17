@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -8,8 +8,27 @@ import { usePathname } from "next/navigation";
 export default function Header() {
     const { data: session } = useSession();
     const pathname = usePathname();
+    const userId = (session?.user as { id?: string })?.id;
     const isArtist = (session?.user as { role?: string })?.role === "ARTIST";
     const [menuOpen, setMenuOpen] = useState(false);
+    const [displayName, setDisplayName] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!userId) return;
+        const fetchLatestName = () => {
+            fetch(`/api/artist/${userId}`)
+                .then((r) => r.ok ? r.json() : null)
+                .then((d) => {
+                    if (d?.username) setDisplayName(d.username);
+                })
+                .catch(() => {});
+        };
+        fetchLatestName();
+        window.addEventListener("b1f-profile-updated", fetchLatestName);
+        return () => window.removeEventListener("b1f-profile-updated", fetchLatestName);
+    }, [userId]);
+
+    const currentName = displayName ?? session?.user?.name ?? session?.user?.email;
 
     const navLinks = [
         { href: "/live", label: "🎸 라이브 무대 (Stage)" },
@@ -48,12 +67,16 @@ export default function Header() {
                                     + 연습일지 기록
                                 </Link>
                             )}
-                            <div className="user-info">
+                            <Link
+                                href={isArtist && userId ? `/artist/${userId}` : "/dashboard"}
+                                className="user-info"
+                                title="내 프로필 보기"
+                            >
                                 <span className="user-role-badge">
                                     {isArtist ? "🎤 뮤지션" : "🎟️ 관객"}
                                 </span>
-                                <span className="user-name">{session.user?.name ?? session.user?.email}</span>
-                            </div>
+                                <span className="user-name">{currentName}</span>
+                            </Link>
                             <button
                                 onClick={() => signOut({ callbackUrl: "/" })}
                                 className="btn-logout"
@@ -97,10 +120,14 @@ export default function Header() {
                     <div className="mobile-menu-divider" />
                     {session ? (
                         <>
-                            <div className="mobile-user-info">
+                            <Link
+                                href={isArtist && userId ? `/artist/${userId}` : "/dashboard"}
+                                className="mobile-user-info"
+                                onClick={() => setMenuOpen(false)}
+                            >
                                 <span>{isArtist ? "🎤 뮤지션" : "🎟️ 관객"}</span>
-                                <span>{session.user?.name ?? session.user?.email}</span>
-                            </div>
+                                <span>{currentName}</span>
+                            </Link>
                             <button
                                 className="mobile-nav-link"
                                 onClick={() => { setMenuOpen(false); signOut({ callbackUrl: "/" }); }}
